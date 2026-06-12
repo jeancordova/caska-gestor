@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CASKA SYSTEM V12.6 (LOCK HEADERS)</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* --- ESTILOS CORPORATIVOS --- */
+        :root { --black: #111111; --red: #D71920; --gray-bg: #F4F6F7; --white: #FFFFFF; --st-proceso: #2C3E50; --st-revision: #F1C40F; --st-correccion: #E67E22; --st-vencido: #C0392B; --st-cerrado: #27AE60; --crit-alta: #C0392B; --crit-media: #F1C40F; --crit-baja: #27AE60; }
+        * { box-sizing: border-box; outline: none; }
+        body { font-family: 'Montserrat', sans-serif; background-color: var(--gray-bg); margin: 0; padding: 0; color: #333; height: 100vh; display: flex; flex-direction: column; }
+        header { background: var(--white); height: 70px; padding: 0 40px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 12px rgba(0,0,0,0.05); z-index: 100; }
+        .logo { font-size: 24px; font-weight: 900; letter-spacing: 1px; color: var(--black); } .logo span { color: var(--red); }
+        .nav-menu { display: flex; gap: 20px; height: 100%; }
+        .nav-btn { background: none; border: none; height: 100%; cursor: pointer; font-weight: 700; font-size: 12px; color: #999; border-bottom: 4px solid transparent; text-transform: uppercase; transition: 0.3s; padding: 0 10px; }
+        .nav-btn.active { color: var(--red); border-bottom-color: var(--red); } .nav-btn:hover { color: var(--black); background: #fafafa; }
+        .user-panel { display: flex; align-items: center; gap: 10px; } .user-badge { background: #eee; padding: 6px 15px; border-radius: 20px; font-weight: 700; font-size: 11px; text-transform: uppercase; }
+        .btn-icon { background: none; border: 1px solid #ddd; padding: 5px 10px; border-radius: 4px; cursor: pointer; transition: 0.2s; font-size: 14px; } .btn-icon:hover { background: #eee; }
+        .btn-logout { border: 1px solid var(--red); color: var(--red); background: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; cursor: pointer; font-size: 10px; transition: 0.2s; } .btn-logout:hover { background: var(--red); color: white; }
+        .btn-admin-config { background: var(--black); color: white; border: none; padding: 6px 15px; border-radius: 20px; font-weight: 700; font-size: 10px; cursor: pointer; display: none; } .btn-admin-config:hover { background: #333; }
+        
+        /* LOGIN */
+        #login-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: #111; z-index: 9999; display: flex; justify-content: center; align-items: center; }
+        .login-card { background: white; padding: 50px; width: 400px; text-align: center; border-top: 6px solid var(--red); border-radius: 4px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+        .inp-login { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ddd; font-family: inherit; font-size: 14px; border-radius: 4px; background-color: white; color: #333; }
+        .btn-enter { width: 100%; padding: 15px; background: var(--red); color: white; border: none; font-weight: 800; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; border-radius: 4px; } .btn-enter:hover { background: #b01217; }
+        #login-overlay select { display:none !important; }
+
+        /* CONTENT */
+        #app-content { display: none; padding: 30px; height: calc(100vh - 70px); overflow-y: auto; }
+        .tab-panel { display: none; animation: fadeIn 0.3s; } .tab-panel.active { display: block; } @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+        
+        /* KPIs */
+        .kpi-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
+        .kpi-box { background: white; padding: 25px; border-radius: 6px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); display: flex; align-items: center; justify-content: space-between; border-left: 5px solid transparent; }
+        .kpi-info { display: flex; flex-direction: column; } .kpi-val { font-size: 42px; font-weight: 900; line-height: 1; margin-bottom: 5px; color: #333; } .kpi-lbl { font-size: 11px; font-weight: 800; text-transform: uppercase; color: #aaa; letter-spacing: 0.5px; }
+        .kb-black { border-left-color: var(--black); } .kb-yellow { border-left-color: var(--st-revision); } .kb-yellow .kpi-val { color: #f39c12; } .kb-red { border-left-color: var(--red); } .kb-red .kpi-val { color: var(--red); }
+        
+        /* SECCIONES & TABLA */
+        .section-box { background: white; border-radius: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 30px; border: 1px solid #eee; overflow: hidden; }
+        .box-header { padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f0f0f0; background: #fff; }
+        .box-title { font-size: 16px; font-weight: 800; text-transform: uppercase; color: var(--black); margin: 0; }
+        #dept-filter { padding: 8px; border: 1px solid #ddd; font-family: inherit; font-size: 12px; margin-right: 10px; cursor: pointer; border-radius: 4px; }
+        #btn-main-action { background: var(--black); color: white; padding: 10px 25px; font-weight: 800; font-size: 11px; border: none; border-radius: 4px; cursor: pointer; text-transform: uppercase; display: none; } #btn-main-action:hover { background: #333; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; } th { background: var(--black); color: white; padding: 15px; text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; position: sticky; top: 0; } td { padding: 15px; border-bottom: 1px solid #f0f0f0; font-size: 12px; color: #444; vertical-align: middle; }
+        .service-sep { background: #eee; color: var(--red); font-weight: 900; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; border-left: 5px solid var(--red); }
+        .row-master { cursor: pointer; transition: 0.2s; border-left: 4px solid transparent; } .row-master:hover { background: #f9f9f9; } .row-master.open { background: #f4f4f4; border-left-color: var(--red); font-weight: 700; }
+        .row-detail { display: none; background: #fafafa; } .row-detail.show { display: table-row; } .detail-container { padding: 20px; border-bottom: 2px solid #ddd; }
+        .subtable { width: 100%; margin: 10px auto; background: white; border: 1px solid #eee; border-radius: 4px; } .subtable th { background: #eee; color: #333; font-weight: 800; font-size: 10px; padding: 10px; } .subtable td { border-bottom: 1px solid #eee; padding: 10px; }
+        .status-badge { padding: 5px 10px; border-radius: 4px; font-weight: 800; font-size: 9px; color: white; text-transform: uppercase; display: inline-block; min-width: 80px; text-align: center; }
+        .bg-proc { background: var(--st-proceso); } .bg-rev { background: var(--st-revision); color: #333; } .bg-cor { background: var(--st-correccion); } .bg-ven { background: var(--st-vencido); } .bg-ok { background: var(--st-cerrado); }
+        .crit-dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block; margin-right: 5px; } .cd-high { background: var(--crit-alta); } .cd-mid { background: var(--crit-media); } .cd-low { background: var(--crit-baja); }
+        .btn-act { padding: 6px 12px; border-radius: 4px; font-weight: 700; font-size: 10px; border: none; cursor: pointer; text-transform: uppercase; margin-right: 5px; }
+        .btn-dark { background: var(--black); color: white; } .btn-green { background: var(--st-cerrado); color: white; } .btn-red { background: var(--red); color: white; } .btn-purple { background: #8e44ad; color: white; }
+        .btn-edit-master { background: none; border: 1px solid #ccc; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 12px; margin-left: 10px; transition: 0.2s; } .btn-edit-master:hover { background: var(--black); color: white; border-color: var(--black); }
+        .btn-csv { background: #27AE60; color: white; border: none; padding: 8px 15px; border-radius: 4px; font-weight: 700; cursor: pointer; font-size: 11px; margin-left: auto; display: block; margin-bottom: 10px; } .btn-csv:hover { background: #219150; }
+        
+        /* ALERTA DE INCIDENCIA CONTESTADA (V12.5) */
+        .answered-dot { height: 10px; width: 10px; background-color: #D71920; border-radius: 50%; display: inline-block; margin-right: 8px; box-shadow: 0 0 8px rgba(215, 25, 32, 0.6); animation: pulse-red 2s infinite; vertical-align: middle; }
+        @keyframes pulse-red { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(215, 25, 32, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(215, 25, 32, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(215, 25, 32, 0); } }
+        .txt-blue { color: #2980b9; font-weight: 800; font-size: 11px; text-transform: uppercase; }
+
+        /* MODALES */
+        #modal-overlay, #admin-overlay, #user-profile-overlay, #admin-edit-user-overlay, #admin-edit-generic-overlay, #view-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); z-index: 5000; justify-content: center; align-items: center; }
+        .modal-card { background: white; width: 1100px; max-height: 90vh; overflow-y: auto; padding: 40px; border-radius: 6px; border-top: 6px solid var(--red); }
+        .modal-title { font-weight: 900; font-size: 18px; border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 20px; color: var(--black); text-transform: uppercase; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 15px; }
+        .lbl { display: block; font-weight: 700; font-size: 11px; margin-bottom: 5px; color: #666; text-transform: uppercase; }
+        .inp { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-family: inherit; font-size: 12px; background-color: white; color: #333; height: 38px; } textarea.inp { height: auto; }
+        select.inp { -webkit-appearance: none; appearance: none; background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23333%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%0-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E"); background-repeat: no-repeat; background-position: right 10px top 50%; background-size: 10px auto; }
+        .mass-row { display: grid; grid-template-columns: 1fr 0.6fr 0.8fr 0.8fr 1.2fr 1fr 30px; gap: 10px; margin-bottom: 10px; background: #f9f9f9; padding: 10px; border: 1px solid #eee; align-items: center; }
+        .reassign-row-item { display: flex; gap: 10px; align-items: center; background: #fffbe6; border: 1px solid #ffe58f; padding: 10px; margin-bottom: 5px; font-size: 11px; }
+        .reassign-box { margin-top: 30px; padding: 20px; border: 2px solid var(--black); background: #fff; display: flex; flex-direction: column; gap: 10px; }
+        .reassign-controls { display: flex; gap: 10px; align-items: center; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px; }
+        .catalog-container { display: flex; flex-wrap: wrap; gap: 10px; padding: 10px; background: #e8f4f8; border: 1px solid #3498db; border-radius: 4px; margin-bottom: 15px; }
+        .cat-chip { background: white; border: 1px solid #3498db; color: #2980b9; padding: 6px 12px; border-radius: 20px; font-size: 10px; font-weight: 800; cursor: pointer; text-transform: uppercase; transition: 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.05); } .cat-chip:hover { background: #3498db; color: white; transform: translateY(-1px); } .cat-chip-icon { margin-right: 5px; }
+        
+        /* ADMIN PANEL */
+        .admin-tab-nav { display: flex; border-bottom: 1px solid #eee; margin-bottom: 20px; overflow-x: auto; }
+        .admin-tab { padding: 10px 20px; cursor: pointer; font-weight: 700; font-size: 12px; color: #777; border-bottom: 3px solid transparent; white-space: nowrap; }
+        .admin-tab.active { color: var(--red); border-bottom-color: var(--red); }
+        .admin-form-box { background: #f9f9f9; padding: 15px; border: 1px solid #eee; margin-bottom: 20px; display: none; } .admin-form-box.active { display: block; }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 15px; margin-top: 20px; }
+        .admin-card { background: white; border: 1px solid #eee; border-radius: 6px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); display: flex; flex-direction: column; }
+        .ac-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; border-bottom: 1px solid #f9f9f9; padding-bottom: 8px; }
+        .ac-title { font-size: 13px; font-weight: 800; color: var(--black); text-transform: uppercase; }
+        .ac-badge { background: #f0f0f0; padding: 3px 8px; border-radius: 4px; font-size: 10px; color: #666; font-weight: 600; font-family: monospace; display: inline-block; margin-bottom: 5px; }
+        .ac-info { font-size: 11px; color: #555; margin-bottom: 5px; }
+        .ac-footer { margin-top: auto; padding-top: 10px; border-top: 1px dashed #eee; font-size: 10px; color: var(--red); font-weight: 700; text-transform: uppercase; }
+        .admin-card.card-invalid { border: 2px solid var(--red); background: #fff0f0; } .admin-card.card-invalid .ac-footer { color: var(--red); font-weight: 900; }
+        .btn-card-edit { background: #f0f0f0; border: none; padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; cursor: pointer; color: #555; } .btn-card-edit:hover { background: var(--black); color: white; }
+        
+        /* GANTT & DASHBOARD */
+        .gantt-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; padding: 0 30px 30px 30px; }
+        .gantt-card { background: white; border: 1px solid #eee; padding: 20px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .gc-head { font-weight: 800; font-size: 12px; margin-bottom: 15px; border-bottom: 1px solid #f0f0f0; padding-bottom: 10px; }
+        .gc-blocks { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+        .gc-block { height: 35px; border-radius: 3px; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; font-size: 9px; font-weight: 700; }
+        .gantt-sep { grid-column: 1 / -1; margin-top: 20px; margin-bottom: 10px; font-weight: 900; font-size: 14px; text-transform: uppercase; color: var(--black); border-bottom: 2px solid var(--red); padding-bottom: 5px; }
+        .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; } .dashboard-full { grid-column: 1 / -1; }
+        .chart-box { background: white; padding: 20px; border-radius: 6px; border: 1px solid #eee; box-shadow: 0 2px 10px rgba(0,0,0,0.02); height: 350px; position: relative; }
+        .db-card-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
+        .db-card { background: white; padding: 20px; border-radius: 6px; border-left: 4px solid var(--black); box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+        .db-card h4 { margin: 0 0 5px 0; font-size: 10px; color: #999; text-transform: uppercase; } .db-card p { margin: 0; font-size: 28px; font-weight: 900; color: var(--black); }
+        
+        /* --- ESTILOS BOTONES DASHBOARD (NUEVO PREMIUM) --- */
+        .stats-tabs { display: flex; justify-content: flex-start; gap: 15px; margin-bottom: 30px; flex-wrap: wrap; background: transparent; padding: 5px; }
+        .st-tab { padding: 10px 25px; border: none; background: white; cursor: pointer; font-weight: 800; font-size: 11px; text-transform: uppercase; border-radius: 50px; color: #95a5a6; box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: all 0.3s ease; outline: none; letter-spacing: 0.5px; }
+        .st-tab:hover { transform: translateY(-2px); color: #333; box-shadow: 0 6px 15px rgba(0,0,0,0.1); }
+        .st-tab.active { background: #111; color: white; box-shadow: 0 5px 20px rgba(0,0,0,0.2); border-bottom: none; border: 1px solid #111; }
+
+        .hidden { display: none !important; }
+        .txt-red { color: var(--st-vencido); font-weight: 800; } .txt-black { color: var(--black); font-weight: 700; } .txt-green { color: var(--st-cerrado); font-weight: 800; }
+        .view-row { margin-bottom: 12px; border-bottom: 1px solid #f9f9f9; padding-bottom: 8px; } .view-l { font-size: 10px; font-weight: 700; color: #999; text-transform: uppercase; display: block; margin-bottom: 4px; } .view-v { font-size: 13px; font-weight: 600; color: #333; }
+        .history-box { margin-top: 20px; background: #f4f4f4; padding: 15px; border-radius: 4px; max-height: 150px; overflow-y: auto; }
+        .hist-item { font-size: 11px; margin-bottom: 8px; border-bottom: 1px solid #ddd; padding-bottom: 5px; } .hist-date { color: #888; font-weight: 700; margin-right: 5px; }
+    </style>
+</head>
+<body>
+
+    <div id="login-overlay">
+        <div class="login-card">
+            <div class="logo" style="margin-bottom:10px;">C<span>A</span>SKA</div>
+            <p style="color:#777; font-size:11px; font-weight:700; margin-bottom:30px; letter-spacing:1px;">SUITE V12.6</p>
+            <input type="text" id="login-user" class="inp-login" placeholder="USUARIO OR CORREO" style="margin-bottom:20px;">
+            <input type="password" id="login-pass" class="inp-login" placeholder="CONTRASEÑA">
+            <button class="btn-enter" onclick="login()">ACCEDER</button>
+        </div>
+    </div>
+
+    <div id="admin-overlay">
+        <div class="modal-card">
+            <div class="modal-title">CONFIGURACIÓN DEL SISTEMA (ADMIN)</div>
+            <div class="admin-tab-nav">
+                <div class="admin-tab" onclick="adminTab('sedes')">SEDES</div>
+                <div class="admin-tab active" onclick="adminTab('users')">USUARIOS</div>
+                <div class="admin-tab" onclick="adminTab('areas')">ÁREAS</div>
+                <div class="admin-tab" onclick="adminTab('services')">SERVICIOS</div>
+                <div class="admin-tab" onclick="adminTab('clients')">CLIENTES</div>
+                <div class="admin-tab" onclick="adminTab('sucursales')">SUCURSALES</div>
+                <div class="admin-tab" onclick="adminTab('types')">TIPOS DE INCIDENCIA</div>
+                <div class="admin-tab" onclick="adminTab('catalog')">CATÁLOGO FRECUENTE</div>
+            </div>
+            
+            <div id="adm-sedes" class="adm-content hidden">
+                <button class="btn-act btn-dark" style="margin-bottom:15px;" onclick="showAddForm('sedes')">+ NUEVA SEDE</button>
+                <div id="form-add-sedes" class="admin-form-box">
+                    <label class="lbl">NOMBRE DE LA SEDE:</label>
+                    <input type="text" id="new-sede-name" class="inp" placeholder="Ej. Planta Norte">
+                    <div style="text-align:right; margin-top:10px;"><button class="btn-act" onclick="hideAddForm('sedes')">CANCELAR</button><button class="btn-act btn-dark" onclick="addConfig('sedes')">GUARDAR</button></div>
+                </div>
+                <div id="list-sedes" class="card-grid"></div>
+            </div>
+
+            <div id="adm-users" class="adm-content">
+                <button class="btn-act btn-dark" style="margin-bottom:15px;" onclick="showAddForm('users')">+ NUEVO USUARIO</button>
+                <div id="form-add-users" class="admin-form-box">
+                    <div style="margin-bottom:20px; padding:15px; background:#e8f4f8; border:1px dashed #3498db; border-radius:4px;">
+                        <h4 style="margin:0 0 10px 0; color:#2980b9; font-size:12px; text-transform:uppercase;">Opción A: Carga Masiva (Desde Excel/CSV)</h4>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-size:10px; color:#555;">Sube múltiples usuarios a la vez:</span>
+                            <div>
+                                <button class="btn-act" onclick="downloadUserTemplate()">1. BAJAR PLANTILLA</button>
+                                <button class="btn-act btn-dark" onclick="document.getElementById('csv-user-upload').click()">2. SUBIR CSV</button>
+                                <input type="file" id="csv-user-upload" style="display:none;" accept=".csv" onchange="uploadUserCSV()">
+                            </div>
+                        </div>
+                    </div>
+                    <div style="padding:15px; border:1px solid #eee; background:white; border-radius:4px;">
+                        <h4 style="margin:0 0 15px 0; color:#333; font-size:12px; text-transform:uppercase; border-bottom:1px solid #eee; padding-bottom:5px;">Opción B: Carga Manual (Uno por uno)</h4>
+                        <div class="form-grid" style="margin-bottom:10px;">
+                            <div><label class="lbl">USUARIO (LOGIN):</label><input type="text" id="new-user-login" class="inp" placeholder="Ej. JuanP"></div>
+                            <div><label class="lbl">CORREO ELECTRÓNICO:</label><input type="text" id="new-user-email" class="inp" placeholder="juan@empresa.com"></div>
+                        </div>
+                        <div class="form-grid" style="margin-bottom:10px;">
+                            <div><label class="lbl">NOMBRE(S):</label><input type="text" id="new-user-name-real" class="inp"></div>
+                            <div><label class="lbl">APELLIDOS:</label><input type="text" id="new-user-surname" class="inp"></div>
+                        </div>
+                        <div class="form-grid" style="margin-bottom:10px;">
+                            <div><label class="lbl">CELULAR:</label><input type="text" id="new-user-phone" class="inp"></div>
+                            <div><label class="lbl">CONTRASEÑA:</label><input type="text" id="new-user-pass" class="inp" value="0000"></div>
+                        </div>
+                        <div class="form-grid" style="margin-bottom:10px;">
+                            <div><label class="lbl">ROL DE ACCESO:</label><select id="new-user-role" class="inp"><option value="Departamento">Departamento</option><option value="Admin">Administrador</option><option value="Mesa">Mesa de Control</option><option value="Validador">Validador</option></select></div>
+                            <div><label class="lbl">1. SEDE:</label><select id="new-user-sede" class="inp" onchange="updateAreaDropdown(this.value, 'new-user-area')"><option value="">- Seleccionar -</option></select></div>
+                        </div>
+                        <div style="margin-bottom:15px;"><label class="lbl">2. ÁREA ASIGNADA:</label><select id="new-user-area" class="inp"><option value="">Primero selecciona Sede</option></select></div>
+                        <div style="text-align:right; border-top:1px solid #eee; padding-top:10px;"><button class="btn-act" style="background:#ccc; color:#333;" onclick="hideAddForm('users')">CANCELAR</button><button class="btn-act btn-dark" onclick="createNewUser()">GUARDAR USUARIO</button></div>
+                    </div>
+                </div>
+                <div id="list-users" class="card-grid"></div>
+            </div>
+
+            <div id="adm-areas" class="adm-content hidden">
+                <button class="btn-act btn-dark" style="margin-bottom:15px;" onclick="showAddForm('areas')">+ NUEVA ÁREA</button>
+                <div id="form-add-areas" class="admin-form-box">
+                    <div class="form-grid" style="margin-bottom:10px;">
+                        <div><label class="lbl">NOMBRE DEL ÁREA:</label><input type="text" id="new-area-name" class="inp"></div>
+                        <div><label class="lbl">PERTENECE A SEDE:</label><select id="new-area-sede" class="inp"></select></div>
+                    </div>
+                    <div style="text-align:right; margin-top:10px;"><button class="btn-act" onclick="hideAddForm('areas')">CANCELAR</button><button class="btn-act btn-dark" onclick="createNewArea()">GUARDAR</button></div>
+                </div>
+                <div id="list-areas" class="card-grid"></div>
+            </div>
+
+            <div id="adm-services" class="adm-content hidden">
+                <button class="btn-act btn-dark" style="margin-bottom:15px;" onclick="showAddForm('services')">+ NUEVO SERVICIO</button>
+                <div id="form-add-services" class="admin-form-box">
+                    <div class="form-grid" style="margin-bottom:0;">
+                        <div><label class="lbl">NOMBRE DEL SERVICIO:</label><input type="text" id="new-service-name" class="inp"></div>
+                        <div><label class="lbl">SEDE:</label><select id="new-service-sede" class="inp"></select></div>
+                    </div>
+                    <div style="text-align:right; margin-top:10px;"><button class="btn-act" onclick="hideAddForm('services')">CANCELAR</button><button class="btn-act btn-dark" onclick="createObj('services')">GUARDAR</button></div>
+                </div>
+                <div id="list-services" class="card-grid"></div>
+            </div>
+
+            <div id="adm-clients" class="adm-content hidden">
+                <!-- PANEL DE HERRAMIENTAS MASIVAS (V12.9) -->
+                <div style="background:#e8f4f8; padding:20px; border:1px dashed #3498db; border-radius:6px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;">
+                    <div style="font-size:12px; font-weight:800; color:#2980b9; text-transform:uppercase;">Herramientas Masivas</div>
+                    <div style="display:flex; gap:10px;">
+                        <button class="btn-act" onclick="downloadClientTemplate()" style="background:#fff; color:#3498db; border:1px solid #3498db;">📥 BAJAR PLANTILLA</button>
+                        <button class="btn-act btn-dark" onclick="document.getElementById('csv-client-upload').click()">📤 SUBIR CARGA MASIVA</button>
+                        <input type="file" id="csv-client-upload" style="display:none;" accept=".csv" onchange="uploadClientCSV()">
+                    </div>
+                </div>
+                <button class="btn-act btn-dark" style="margin-bottom:15px;" onclick="showAddForm('clients')">+ NUEVO CLIENTE</button>
+                <div id="form-add-clients" class="admin-form-box">
+                    <div class="form-grid" style="margin-bottom:0;">
+                        <div><label class="lbl">NOMBRE DEL CLIENTE:</label><input type="text" id="new-client-name" class="inp"></div>
+                        <div><label class="lbl">SEDE:</label><select id="new-client-sede" class="inp"></select></div>
+                    </div>
+                    <div style="text-align:right; margin-top:10px;"><button class="btn-act" onclick="hideAddForm('clients')">CANCELAR</button><button class="btn-act btn-dark" onclick="createObj('clients')">GUARDAR</button></div>
+                </div>
+                <div id="list-clients" class="card-grid"></div>
+            </div>
+
+            <div id="adm-sucursales" class="adm-content hidden">
+                <button class="btn-act btn-dark" style="margin-bottom:15px;" onclick="showAddForm('sucursales')">+ NUEVA SUCURSAL</button>
+                <div id="form-add-sucursales" class="admin-form-box">
+                    <div class="form-grid" style="margin-bottom:0;">
+                        <div><label class="lbl">NOMBRE SUCURSAL:</label><input type="text" id="new-sucursales-name" class="inp"></div>
+                        <div><label class="lbl">PERTENECE A CLIENTE:</label><select id="new-sucursales-client" class="inp"></select></div>
+                    </div>
+                    <div style="text-align:right; margin-top:10px;"><button class="btn-act" onclick="hideAddForm('sucursales')">CANCELAR</button><button class="btn-act btn-dark" onclick="createObj('sucursales')">GUARDAR</button></div>
+                </div>
+                <div id="list-sucursales" class="card-grid"></div>
+            </div>
+
+            <div id="adm-types" class="adm-content hidden">
+                <button class="btn-act btn-dark" style="margin-bottom:15px;" onclick="showAddForm('types')">+ NUEVO TIPO</button>
+                <div id="form-add-types" class="admin-form-box">
+                    <label class="lbl">NOMBRE DEL NUEVO TIPO:</label>
+                    <input type="text" id="new-types-name" class="inp" placeholder="Ej. Insultos Frecuentes">
+                    <div style="text-align:right; margin-top:10px;"><button class="btn-act" onclick="hideAddForm('types')">CANCELAR</button><button class="btn-act btn-dark" onclick="addConfig('types')">GUARDAR</button></div>
+                </div>
+                <div id="list-types" class="card-grid"></div>
+            </div>
+
+            <div id="adm-catalog" class="adm-content hidden">
+                <button class="btn-act btn-dark" style="margin-bottom:15px;" onclick="showAddForm('catalog')">+ NUEVA INCIDENCIA FRECUENTE</button>
+                <div id="form-add-catalog" class="admin-form-box">
+                    <div class="form-grid">
+                        <div><label class="lbl">NOMBRE CORTO (BOTÓN):</label><input type="text" id="new-catalog-name" class="inp" placeholder="Ej. Uniforme"></div>
+                        <div><label class="lbl">TIPO:</label><select id="new-catalog-type" class="inp"></select></div>
+                    </div>
+                    <div class="form-grid">
+                        <div><label class="lbl">CRITICIDAD:</label><select id="new-catalog-crit" class="inp"><option value="Alta">Alta</option><option value="Media">Media</option><option value="Baja">Baja</option></select></div>
+                    </div>
+                    <div style="margin-bottom:10px;"><label class="lbl">DESCRIPCIÓN AUTOMÁTICA:</label><textarea id="new-catalog-desc" class="inp" rows="2"></textarea></div>
+                    <div style="text-align:right;"><button class="btn-act" onclick="hideAddForm('catalog')">CANCELAR</button><button class="btn-act btn-dark" onclick="createCatalogItem()">GUARDAR</button></div>
+                </div>
+                <div id="list-catalog" class="card-grid"></div>
+            </div>
+
+            <div class="modal-footer"><button class="btn-act" style="background:#ccc; color:#333;" onclick="document.getElementById('admin-overlay').style.display='none'">CERRAR</button></div>
+        </div>
+    </div>
+
+    <div id="admin-edit-user-overlay">
+        <div class="modal-card" style="width:500px;">
+            <div class="modal-title">EDITAR USUARIO</div>
+            <input type="hidden" id="edit-user-idx">
+            <label class="lbl">USUARIO (LOGIN):</label><input type="text" id="edit-user-name" class="inp" disabled style="background:#eee; margin-bottom:15px;">
+            <label class="lbl">NOMBRE REAL:</label><input type="text" id="edit-user-nick" class="inp" style="margin-bottom:10px;">
+            <label class="lbl">ROL DE ACCESO:</label><select id="edit-user-role" class="inp" style="margin-bottom:10px;"><option value="Departamento">Departamento</option><option value="Admin">Administrador</option><option value="Mesa">Mesa de Control</option><option value="Validador">Validador</option></select>
+            <label class="lbl">SEDE (FILTRO):</label><select id="edit-user-sede" class="inp" style="margin-bottom:10px;" onchange="updateAreaDropdown(this.value, 'edit-user-area')"></select>
+            <label class="lbl">ÁREA ASIGNADA:</label><select id="edit-user-area" class="inp" style="margin-bottom:20px;"></select>
+            <div style="background:#ffebeb; padding:15px; border:1px solid #ffd1d1; border-radius:4px;"><label class="lbl" style="color:var(--red);">SEGURIDAD: CAMBIAR CONTRASEÑA</label><p style="font-size:10px; margin-bottom:10px;">Confirma TU contraseña de Admin.</p><input type="password" id="admin-verify-pass" class="inp" placeholder="TU Contraseña de Admin" style="margin-bottom:10px;"><button class="btn-act btn-red" onclick="verifyAdminAndReveal()" style="width:100%;">DESBLOQUEAR CAMPO</button><div id="user-pass-container" class="hidden" style="margin-top:15px; border-top:1px solid #e00000; padding-top:10px;"><label class="lbl">NUEVA CONTRASEÑA:</label><input type="text" id="edit-user-pass" class="inp"></div></div>
+            <div style="margin-top:30px; border-top:1px solid #eee; padding-top:15px; text-align:left;"><button class="btn-act btn-red" onclick="deleteUser()">ELIMINAR USUARIO</button></div>
+            <div class="modal-footer"><button class="btn-act btn-dark" onclick="saveUserConfig()">GUARDAR CAMBIOS</button><button class="btn-act" style="background:#ccc; color:#333;" onclick="document.getElementById('admin-edit-user-overlay').style.display='none'">CANCELAR</button></div>
+        </div>
+    </div>
+
+    <div id="admin-edit-generic-overlay">
+        <div class="modal-card" style="width:500px;">
+            <div class="modal-title" id="edit-generic-title">EDITAR</div>
+            <input type="hidden" id="edit-generic-type"><input type="hidden" id="edit-generic-idx">
+            <label class="lbl">NOMBRE:</label><input type="text" id="edit-generic-name" class="inp" style="margin-bottom:15px;">
+            <div id="edit-generic-extra"></div>
+            <div style="margin-top:30px; border-top:1px solid #eee; padding-top:15px; text-align:left;"><button class="btn-act btn-red" onclick="deleteGeneric()">ELIMINAR REGISTRO</button></div>
+            <div class="modal-footer"><button class="btn-act btn-dark" onclick="saveGeneric()">GUARDAR CAMBIOS</button><button class="btn-act" style="background:#ccc; color:#333;" onclick="document.getElementById('admin-edit-generic-overlay').style.display='none'">CANCELAR</button></div>
+        </div>
+    </div>
+
+    <div id="user-profile-overlay">
+        <div class="modal-card" style="width:450px;">
+            <div class="modal-title">MI PERFIL</div>
+            <p style="font-size:11px; color:#666; margin-bottom:20px;">Ingresa tu contraseña actual.</p>
+            <label class="lbl">CONTRASEÑA ACTUAL (OBLIGATORIO):</label><input type="password" id="my-old-pass" class="inp" style="margin-bottom:15px;">
+            <label class="lbl">MI NOMBRE / APODO:</label><input type="text" id="my-nick" class="inp" style="margin-bottom:15px;">
+            <hr style="border:0; border-top:1px solid #eee; margin:20px 0;">
+            <label class="lbl">NUEVA CONTRASEÑA (OPCIONAL):</label><input type="password" id="my-new-pass" class="inp" style="margin-bottom:10px;" placeholder="Vacío si no cambias">
+            <label class="lbl">CONFIRMAR:</label><input type="password" id="my-confirm-pass" class="inp" style="margin-bottom:20px;">
+            <button class="btn-enter" onclick="saveMyProfile()">GUARDAR</button><button class="btn-act" style="background:#ccc; color:#333; width:100%; margin-top:10px;" onclick="document.getElementById('user-profile-overlay').style.display='none'">CANCELAR</button>
+        </div>
+    </div>
+
+    <div id="app-content">
+        <header>
+            <div class="logo">C<span>A</span>SKA</div>
+            <div class="nav-menu">
+                <button class="nav-btn active" onclick="nav('panel', this)">PANEL OPERATIVO</button>
+                <button class="nav-btn" onclick="nav('gantt', this)">SEGUIMIENTO VISUAL</button>
+                <button class="nav-btn" onclick="nav('stats', this)">ESTADÍSTICAS</button>
+            </div>
+            <div class="user-panel">
+                <button id="btn-admin-config" class="btn-admin-config" onclick="openAdminPanel()">⚙️ CONFIGURACIÓN</button>
+                <span class="user-badge" id="user-display">USUARIO</span>
+                <button class="btn-icon" onclick="openMyProfile()" title="Cambiar Contraseña">🔑</button>
+                <button class="btn-logout" onclick="location.reload()">SALIR</button>
+            </div>
+        </header>
+        <br>
+        <div id="view-panel" class="tab-panel active">
+            <div class="kpi-row"><div class="kpi-box kb-black"><div class="kpi-info"><span class="kpi-val" id="k-ab">0</span><span class="kpi-lbl">ABIERTAS</span></div></div><div class="kpi-box kb-yellow"><div class="kpi-info"><span class="kpi-val" id="k-pr">0</span><span class="kpi-lbl">EN PROCESO</span></div></div><div class="kpi-box kb-red"><div class="kpi-info"><span class="kpi-val" id="k-ve">0</span><span class="kpi-lbl">VENCIDAS</span></div></div></div>
+            <div class="section-box">
+                <div class="box-header"><h3 class="box-title">FOLIOS DE CARGA</h3><div style="display:flex; align-items:center;"><select id="dept-filter" class="inp hidden" style="margin-right:10px; width:200px;" onchange="renderTable()"><option value="all">VER TODOS LOS DEPTOS</option></select><button id="btn-main-action" onclick="openModal('masiva')">+ CARGA MASIVA</button></div></div>
+                <div style="overflow-x:auto;"><table><thead><tr><th style="width:50px;"></th><th>FOLIO</th><th>SERVICIO</th><th>CLIENTE</th><th>RESUMEN / ESTATUS</th></tr></thead><tbody id="table-body"></tbody></table><div id="msg-empty" style="text-align:center; padding:40px; color:#999; display:none;">No hay registros visibles.</div></div>
+            </div>
+        </div>
+        <div id="view-gantt" class="tab-panel"><div class="section-box"><div class="box-header"><h3 class="box-title">MATRIZ DE SEGUIMIENTO</h3></div><div id="gantt-grid" class="gantt-grid"></div></div></div>
+        
+        <div id="view-stats" class="tab-panel">
+            <div class="section-box">
+                <div class="box-header"><h3 class="box-title">DASHBOARD CORPORATIVO</h3><button class="btn-csv" onclick="exportToCSV()">📥 DESCARGAR BASE DE DATOS (CSV)</button></div>
+                <div style="padding:20px;">
+                    <div class="stats-tabs" id="stats-tabs-container"></div>
+                    <div class="db-card-row">
+                        <div class="db-card" style="border-color:#111;"><h4>TOTAL INCIDENCIAS</h4><p id="db-total">0</p></div>
+                        <div class="db-card" style="border-color:#27AE60;"><h4>RESUELTAS</h4><p id="db-closed">0</p></div>
+                        <div class="db-card" style="border-color:#D71920;"><h4>PENDIENTES</h4><p id="db-pending">0</p></div>
+                        <div class="db-card" style="border-color:#F1C40F;"><h4>% EFICIENCIA</h4><p id="db-eff">0%</p></div>
+                    </div>
+                    <div class="dashboard-grid">
+                        <div class="chart-box"><canvas id="chartType"></canvas></div>
+                        <div class="chart-box"><canvas id="chartClient"></canvas></div>
+                        <div class="chart-box dashboard-full"><canvas id="chartTime"></canvas></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-title" id="modal-title-text">GESTIÓN DE INCIDENCIA</div>
+            <input type="hidden" id="m-id"><input type="hidden" id="m-mode"><input type="hidden" id="master-id-ref">
+            
+            <div style="background:#f9f9f9; padding:20px; border-radius:4px; margin-bottom:20px; border:1px solid #eee;">
+                <div class="form-grid" style="margin:0;">
+                    <div><label class="lbl">1. SERVICIO</label><select id="f-serv" class="inp" onchange="updateClientSelect()"></select></div>
+                    <div><label class="lbl">2. CLIENTE</label><select id="f-cli" class="inp" onchange="updateSucursalSelect()"></select></div>
+                </div>
+                <div style="margin-top:10px; margin-bottom:15px;">
+                    <label class="lbl">3. SUCURSAL</label><select id="f-sucursal" class="inp"><option value="">- Selecciona Cliente -</option></select>
+                </div>
+            </div>
+            
+            <div id="sec-masiva" class="hidden">
+                <h4 style="margin:0 0 10px 0; font-size:12px; color:var(--black);">INCIDENCIAS NUEVAS (CLICK PARA AGREGAR RÁPIDO)</h4>
+                <div id="catalog-chips" class="catalog-container"></div>
+                
+                <div style="display:grid; grid-template-columns: 1fr 0.6fr 0.8fr 0.8fr 1.2fr 1fr 30px; gap:10px; margin-bottom:5px; font-size:10px; font-weight:700; color:#888;"><span>RESPONSABLE</span><span>CRITICIDAD</span><span>FECHA</span><span>TIPO</span><span>DESCRIPCIÓN</span><span>DOC. INICIAL</span><span></span></div>
+                <div id="rows-container"></div>
+                <button class="btn-add" onclick="addRow()">+ AGREGAR FILA MANUALMENTE</button>
+                
+                <div class="reassign-box"><label class="lbl" style="margin:0; font-size:14px; color:var(--red);">REASIGNAR (COPIAR) INCIDENCIA:</label><div class="reassign-controls"><select id="rea-serv" class="inp" style="flex:1;" onchange="updateReassignChain()"><option value="">1. Servicio...</option></select><select id="rea-cli" class="inp" style="flex:1;" onchange="updateReassignChain()"><option value="">2. Cliente...</option></select><select id="rea-suc" class="inp" style="flex:1;" onchange="updateReassignChain()"><option value="">3. Sucursal...</option></select><select id="rea-folio" class="inp" style="flex:1.5;"><option value="">4. Selecciona Folio...</option></select></div><div style="display:flex; gap:10px; align-items:center; margin-top:10px;"><input type="date" id="rea-new-date" class="inp" placeholder="Nueva Fecha" style="flex:1;"><input type="text" id="rea-motivo" class="inp" placeholder="MOTIVO DE REASIGNACIÓN (Obligatorio)" style="flex:2;"><button class="btn-act btn-dark" onclick="executeReassign()">AGREGAR COPIA</button></div></div><h4 style="margin:20px 0 10px 0; font-size:12px; color:var(--red);">LISTA DE REASIGNACIONES POR GUARDAR</h4><div id="reassign-list-container"></div>
+            </div>
+            
+            <div id="sec-single" class="hidden">
+                <div class="form-grid">
+                    <div>
+                        <label class="lbl">TIPO DE INCIDENCIA</label>
+                        <select id="f-type" class="inp" onchange="checkTypeOther()"></select>
+                        <input type="text" id="f-type-other" class="inp hidden" placeholder="Especifique cuál..." style="margin-top:5px; border:1px solid #2C3E50; font-weight:bold;">
+                    </div>
+                    <div><label class="lbl">CRITICIDAD</label><select id="f-crit" class="inp"><option value="Alta">ALTA</option><option value="Media">MEDIA</option><option value="Baja">BAJA</option></select></div>
+                </div>
+                <div class="row-form"><label class="lbl">DESCRIPCIÓN / MOTIVO</label><textarea id="f-desc" class="inp" rows="2"></textarea></div><div class="row-form" style="background:#eee; padding:5px; border-radius:4px; font-size:11px; margin-bottom:10px;"><span style="font-weight:700;">DESC. ORIGINAL (SI ES REASIGNACIÓN):</span> <span id="f-orig-desc" style="font-style:italic;">N/A</span></div><div class="row-form" style="background:#eee; padding:10px; border-radius:4px;"><label class="lbl">DOCUMENTO INICIAL (ORDEN/EVIDENCIA):</label><input type="file" id="f-init-file" disabled><span id="f-init-file-name" style="font-size:11px; font-style:italic; margin-left:10px;"></span></div><div class="form-grid" style="margin-top:10px;"><div><label class="lbl">RESPONSABLE</label><input type="text" id="f-resp" class="inp" disabled></div><div><label class="lbl" style="color:var(--red);">FECHA COMPROMISO</label><input type="date" id="f-date" class="inp"></div></div><div style="background:#fffafa; padding:15px; border:1px solid #ffebeb; border-radius:4px;"><label class="lbl" style="color:var(--red);">RESPUESTA / EVIDENCIA FINAL</label><input type="file" id="f-file" style="margin-top:5px; width:100%;"><textarea id="f-evi" class="inp" rows="3" style="margin-top:10px;" placeholder="Comentarios..."></textarea></div><div id="box-feedback" class="hidden" style="margin-top:15px; background:#ffebeb; padding:10px; border-radius:4px;"><label class="lbl" style="color:var(--red);">MOTIVO DE RECHAZO:</label><textarea id="f-feedback" class="inp" rows="2" style="border-color:var(--red);"></textarea></div>
+            </div>
+            <div class="modal-footer"><button class="btn-act" style="background:#ccc; color:#333; padding:10px 20px;" onclick="closeModal()">CANCELAR</button><button id="btn-save" class="btn-act btn-dark" style="padding:10px 20px;" onclick="saveData()">GUARDAR</button><button id="btn-approve" class="btn-act btn-green hidden" style="padding:10px 20px;" onclick="validate(true)">✅ APROBAR</button><button id="btn-reject" class="btn-act btn-red hidden" style="padding:10px 20px;" onclick="validate(false)">❌ RECHAZAR</button><button id="btn-reopen" class="btn-act btn-purple hidden" style="padding:10px 20px;" onclick="reopenIncidence()">🔓 REAPERTURAR</button></div>
+        </div>
+    </div>
+    
+    <div id="view-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:6000; justify-content:center; align-items:center;">
+        <div class="modal-card" style="width:750px;">
+            <div class="modal-title">DETALLE DE ACTIVIDAD - FICHA TÉCNICA</div>
+            
+            <h4 style="margin:0 0 10px 0; color:#888; font-size:10px; border-bottom:1px solid #eee; text-transform:uppercase;">Información General</h4>
+            <div class="form-grid" style="grid-template-columns: repeat(4, 1fr); gap:10px; background:#f9f9f9; padding:10px; border-radius:4px;">
+                <div><span class="view-l">FOLIO</span><span class="view-v" id="v-folio" style="font-size:16px;"></span></div>
+                <div><span class="view-l">ESTATUS</span><span id="v-status" class="status-badge"></span></div>
+                <div><span class="view-l">CRITICIDAD</span><span class="view-v" id="v-crit"></span></div>
+                <div><span class="view-l">FECHA LÍMITE</span><span class="view-v" id="v-date" style="color:#D71920;"></span></div>
+            </div>
+
+            <div class="form-grid" style="margin-top:15px;">
+                <div><span class="view-l">SERVICIO / CLIENTE</span><span class="view-v" id="v-serv-cli"></span></div>
+                <div><span class="view-l">ÁREA RESPONSABLE</span><span class="view-v" id="v-resp"></span></div>
+            </div>
+            
+            <div class="view-row"><span class="view-l">TIPO DE INCIDENCIA</span><span class="view-v" id="v-type"></span></div>
+            <div class="view-row"><span class="view-l">DESCRIPCIÓN / MOTIVO</span><span class="view-v" id="v-desc" style="font-weight:400; background:#fffbe6; padding:8px; border:1px solid #ffe58f; border-radius:4px; display:block;"></span></div>
+            
+            <div class="view-row" id="view-origin-row" style="display:none; background:#e3f2fd; padding:8px; border:1px solid #90caf9; border-radius:4px; margin-bottom:10px;">
+                <span class="view-l" style="color:#1565c0;">🔄 ORIGEN DE REASIGNACIÓN (PADRE):</span>
+                <span class="view-v" id="v-origin-folio" style="color:#0d47a1; font-weight:800;"></span>
+            </div>
+
+            <div class="view-row" id="view-orig-desc-row" style="display:none;"><span class="view-l">DESC. ORIGINAL (HISTÓRICO)</span><span class="view-v" id="v-orig-desc" style="font-style:italic; color:#777;"></span></div>
+
+            <h4 style="margin:20px 0 10px 0; color:#888; font-size:10px; border-bottom:1px solid #eee; text-transform:uppercase;">Trazabilidad & Tiempos (Rastreo)</h4>
+            <div style="background:#e8f4f8; padding:15px; border-radius:4px; border:1px solid #3498db; display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+                <div>
+                    <span class="view-l" style="color:#2980b9;">CREADO POR:</span>
+                    <span class="view-v" id="v-created-by"></span>
+                    <span class="view-l" style="margin-top:5px; color:#2980b9;">FECHA CREACIÓN:</span>
+                    <span class="view-v" id="v-created-at"></span>
+                </div>
+                <div style="border-left:1px solid #bbdefb; padding-left:15px;">
+                    <span class="view-l" style="color:#2980b9;">LECTURA (VISTO):</span>
+                    <span class="view-v" id="v-read-status"></span>
+                    <span class="view-l" style="margin-top:5px; color:#2980b9;">LEÍDO POR / FECHA:</span>
+                    <span class="view-v" id="v-read-info"></span>
+                </div>
+            </div>
+
+            <h4 style="margin:20px 0 10px 0; color:#888; font-size:10px; border-bottom:1px solid #eee; text-transform:uppercase;">Evidencias y Cierre</h4>
+            <div class="view-row"><span class="view-l">DOCUMENTO INICIAL</span><span class="view-v" id="v-init-file"></span></div>
+            <div class="view-row" style="background:#f0f9f0; padding:10px; border:1px solid #cce5cc; border-radius:4px;"><span class="view-l" style="color:#27ae60;">RESPUESTA / EVIDENCIA FINAL</span><span class="view-v" id="v-evi"></span></div>
+            <div class="view-row" id="view-feedback-box" style="display:none; background:#ffebeb; padding:10px; margin-top:10px; border:1px solid #ffcccc;"><span class="view-l" style="color:red;">MOTIVO DE RECHAZO</span><span class="view-v" id="v-feed"></span></div>
+
+            <div style="margin-top:15px;"><span class="view-l">HISTORIAL COMPLETO DE MOVIMIENTOS</span><div id="v-history" class="history-box"></div></div>
+            
+            <div style="text-align:right; margin-top:20px;">
+                <button class="btn-act btn-dark" onclick="document.getElementById('view-overlay').style.display='none'">CERRAR FICHA</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const defaultDB = { 
+            data: [], 
+            masterCounter: 1,
+            config: {
+                users: [
+                    {name: "Admin", email: "admin@caska.com", pass: "0000", nickname: "ADMIN", area: "Admin", sede: "Corporativo", role: "Admin"},
+                    {name: "Mesa", email: "mesa@caska.com", pass: "0000", nickname: "MESA CONTROL", area: "Admin", sede: "Corporativo", role: "Mesa"},
+                    {name: "Validador", email: "validador@caska.com", pass: "0000", nickname: "VALIDADOR", area: "Admin", sede: "Corporativo", role: "Validador"},
+                    {name: "Calidad", email: "calidad@caska.com", pass: "0000", nickname: "Calidad", area: "Calidad", sede: "Corporativo", role: "Departamento"},
+                    {name: "RH", email: "rh@caska.com", pass: "0000", nickname: "Recursos Humanos", area: "RH", sede: "Corporativo", role: "Departamento"},
+                    {name: "SGC", email: "sgc@caska.com", pass: "0000", nickname: "SGC", area: "SGC", sede: "Corporativo", role: "Departamento"},
+                    {name: "Operaciones", email: "operaciones@caska.com", pass: "0000", nickname: "Operaciones", area: "Operaciones", sede: "Operativo", role: "Departamento"},
+                    {name: "Flotillas", email: "flotillas@caska.com", pass: "0000", nickname: "Flotillas", area: "Flotillas", sede: "Patio", role: "Departamento"},
+                    {name: "AdminDepto", email: "admindepto@caska.com", pass: "0000", nickname: "Administración", area: "Admin", sede: "Corporativo", role: "Departamento"}
+                ],
+                sedes: ["Corporativo", "Almacen", "Planta", "Patio", "Operativo"],
+                areas: [
+                    {name: "Calidad", loc: "Corporativo", sede: "Corporativo"},
+                    {name: "RH", loc: "Corporativo", sede: "Corporativo"},
+                    {name: "SGC", loc: "Corporativo", sede: "Corporativo"},
+                    {name: "Operaciones", loc: "Operativo", sede: "Operativo"},
+                    {name: "Flotillas", loc: "Patio", sede: "Patio"},
+                    {name: "Admin", loc: "Corporativo", sede: "Corporativo"}
+                ],
+                services: [
+                    {name: "Intramuros", sede: "Corporativo"},
+                    {name: "Flotillas", sede: "Patio"},
+                    {name: "Monitoreo", sede: "Corporativo"}
+                ],
+                clients: [
+                    {name: "Collado", sede: "Corporativo"},
+                    {name: "Peñafiel", sede: "Corporativo"},
+                    {name: "CocaCola", sede: "Corporativo"}
+                ],
+                types: ["Faltas", "Manejo", "Retardos", "Sentido de Alerta", "Conducta", "Otro"],
+                sucursales: [
+                    {name: "Toluca", client: "CocaCola"},
+                    {name: "Valle de Bravo", client: "Peñafiel"}
+                ],
+                catalog: [
+                    {name: "Falta Justificada", type: "Faltas", crit: "Baja", desc: "No se presentó a laborar con aviso previo."},
+                    {name: "Sin Botas", type: "E.P.P", crit: "Alta", desc: "Personal ingresa a planta sin calzado de seguridad."}
+                ]
+            }
+        };
+
+        // --- CONEXIÓN A SUPABASE (BASE DE DATOS CENTRALIZADA) ---
+        const SUPABASE_REST_URL = "https://grhmvfzcvdygqghaktuw.supabase.co/rest/v1";
+        const SUPABASE_API_KEY = "sb_publishable_yjIKDmjL8Q2162OvINBGPQ_MJvVqILu";
+        const LOCAL_FALLBACK_KEY = "caska_v3_6_fix";
+
+        let db = JSON.parse(JSON.stringify(defaultDB));
+        let remoteReady = false;
+        let saveTimer = null;
+
+        function normalizeDB() {
+            if(!db || !db.config) db = JSON.parse(JSON.stringify(defaultDB));
+            if(!db.data) db.data = [];
+            if(!db.masterCounter) db.masterCounter = 1;
+            if(!db.config.users) db.config.users = defaultDB.config.users;
+            if(!db.config.sedes) db.config.sedes = defaultDB.config.sedes;
+            if(!db.config.areas) db.config.areas = defaultDB.config.areas;
+            if(!db.config.sucursales) db.config.sucursales = defaultDB.config.sucursales; 
+            if(!db.config.catalog) db.config.catalog = defaultDB.config.catalog;
+            if(!db.config.types) db.config.types = defaultDB.config.types;
+            if(!db.config.services) db.config.services = defaultDB.config.services;
+            if(!db.config.clients) db.config.clients = defaultDB.config.clients;
+
+            db.config.users = db.config.users.map(u => {
+                if(!u.role) {
+                    if(u.name === 'Admin') u.role = 'Admin';
+                    else if(u.name === 'Mesa') u.role = 'Mesa';
+                    else if(u.name === 'Validador') u.role = 'Validador';
+                    else u.role = 'Departamento';
+                }
+                return u;
+            });
+        }
+
+        async function loadDBFromSupabase() {
+            const btn = document.querySelector('#login-overlay .btn-enter');
+            if(btn) { btn.disabled = true; btn.innerText = 'CARGANDO...'; }
+
+            try {
+                const response = await fetch(`${SUPABASE_REST_URL}/app_state?id=eq.main&select=data`, {
+                    method: 'GET',
+                    headers: {
+                        'apikey': SUPABASE_API_KEY,
+                        'Authorization': `Bearer ${SUPABASE_API_KEY}`,
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if(!response.ok) throw new Error(`Supabase GET ${response.status}`);
+                const rows = await response.json();
+                const remoteData = rows && rows[0] ? rows[0].data : null;
+                const localData = JSON.parse(localStorage.getItem(LOCAL_FALLBACK_KEY) || 'null');
+
+                if(remoteData && remoteData.config) {
+                    db = remoteData;
+                } else if(localData && localData.config) {
+                    db = localData;
+                } else {
+                    db = JSON.parse(JSON.stringify(defaultDB));
+                }
+
+                normalizeDB();
+                remoteReady = true;
+
+                // Si Supabase estaba vacío, sube la primera versión de la base.
+                if(!remoteData || !remoteData.config) await saveDB(true);
+            } catch(err) {
+                console.error('No se pudo cargar Supabase. Usando respaldo local:', err);
+                const localData = JSON.parse(localStorage.getItem(LOCAL_FALLBACK_KEY) || 'null');
+                db = localData && localData.config ? localData : JSON.parse(JSON.stringify(defaultDB));
+                normalizeDB();
+                alert('Aviso: no se pudo conectar con Supabase. El sistema usará respaldo local en este navegador.');
+            } finally {
+                loadConfigDropdowns();
+                if(btn) { btn.disabled = false; btn.innerText = 'ACCEDER'; }
+            }
+        }
+
+        let session = { role: '', user: '', nickname: '', area: '' };
+        let currentStatService = "Intramuros";
+        let pendingReassigns = [];
+
+        let chartTypeInst = null;
+        let chartClientInst = null;
+        let chartTimeInst = null;
+
+        (function init() { loadDBFromSupabase(); })();
+
+        function loadConfigDropdowns() {
+            const df = document.getElementById('dept-filter'); 
+            if(df) {
+                df.innerHTML = '<option value="all">VER TODOS LOS DEPTOS</option>'; 
+                db.config.areas.forEach(a => df.innerHTML += `<option value="${a.name}">${a.name}</option>`);
+            }
+            const stc = document.getElementById('stats-tabs-container'); 
+            if(stc) {
+                stc.innerHTML = '<button class="st-tab" onclick="filterStats(\'ALL\', this)">TODOS (CORPORATIVO)</button>';
+                if(db.config.services.length > 0) {
+                    db.config.services.forEach((s, idx) => { 
+                        const sName = typeof s === 'string' ? s : s.name;
+                        const active = idx===0 ? 'active' : '';
+                        if(idx===0) currentStatService = sName;
+                        stc.innerHTML += `<button class="st-tab ${active}" onclick="filterStats('${sName}', this)">${sName.toUpperCase()}</button>`; 
+                    });
+                }
+            }
+        }
+
+        function login() {
+            const inputField = document.getElementById('login-user');
+            const passField = document.getElementById('login-pass');
+            const inputVal = inputField.value.trim();
+            const pass = passField.value;
+            if(!inputVal) return alert("Por favor, ingresa tu Usuario o Correo.");
+            const userObj = db.config.users.find(u => u.name.toLowerCase() === inputVal.toLowerCase() || (u.email && u.email.toLowerCase() === inputVal.toLowerCase()));
+            if (!userObj) return alert("Usuario no encontrado.");
+            if (pass !== userObj.pass) return alert("Contraseña incorrecta.");
+            session.user = userObj.name;
+            session.realName = (userObj.realName || userObj.name) + (userObj.surname ? ' ' + userObj.surname : '');
+            session.nickname = userObj.nickname || userObj.name;
+            session.area = userObj.area;
+            if(userObj.role === 'Admin' || userObj.role === 'Administrador') session.role = 'admin';
+            else if(userObj.role === 'Mesa' || userObj.role === 'Mesa de Control') session.role = 'mesa';
+            else if(userObj.role === 'Validador') session.role = 'validador';
+            else session.role = 'depto';
+            document.getElementById('login-overlay').style.display = 'none';
+            document.getElementById('app-content').style.display = 'block';
+            updateUserDisplay();
+            const btnCreate = document.getElementById('btn-main-action');
+            const btnAdmin = document.getElementById('btn-admin-config');
+            if (['admin', 'mesa', 'validador'].includes(session.role)) btnCreate.style.display = 'block'; else btnCreate.style.display = 'none'; 
+            if (session.role === 'admin') { document.getElementById('dept-filter').classList.remove('hidden'); btnAdmin.style.display = 'block'; } else btnAdmin.style.display = 'none'; 
+            renderTable(); renderGantt(); renderDashboard(); updateKPIs();
+        }
+
+        function updateUserDisplay() {
+            let displayName = session.nickname;
+            if(session.role === 'depto') displayName += ` [${session.area}]`;
+            document.getElementById('user-display').innerText = displayName;
+        }
+
+        function showAddForm(type) {
+            document.getElementById(`form-add-${type}`).classList.add('active');
+            if (type === 'users') {
+                const sSelect = document.getElementById('new-user-sede'); sSelect.innerHTML = '<option value="">- Seleccionar -</option>';
+                db.config.sedes.forEach(s => sSelect.innerHTML += `<option>${s}</option>`);
+                document.getElementById('new-user-area').innerHTML = '<option value="">Primero selecciona Sede</option>';
+            }
+            if (type === 'sucursales') {
+                const cSelect = document.getElementById('new-sucursales-client'); 
+                cSelect.innerHTML = '';
+                db.config.clients.forEach(c => cSelect.innerHTML += `<option>${c.name}</option>`);
+            }
+            if (['areas','services','clients'].includes(type)) {
+                const sSelect = document.getElementById(`new-${type.slice(0,-1)}-sede`);
+                if(sSelect) {
+                    sSelect.innerHTML = '';
+                    db.config.sedes.forEach(s => sSelect.innerHTML += `<option>${s}</option>`);
+                }
+            }
+            if (type === 'catalog') {
+                const sel = document.getElementById('new-catalog-type'); sel.innerHTML='';
+                db.config.types.forEach(t => sel.innerHTML+=`<option>${t}</option>`);
+            }
+        }
+        
+        function updateAreaDropdown(sedeVal, targetId) {
+            const areaSel = document.getElementById(targetId);
+            areaSel.innerHTML = '';
+            const areas = db.config.areas.filter(a => a.sede === sedeVal);
+            if(areas.length === 0) areaSel.innerHTML = '<option value="">Sin áreas en esta sede</option>';
+            else areas.forEach(a => areaSel.innerHTML += `<option value="${a.name}">${a.name}</option>`);
+        }
+
+        function hideAddForm(type) { document.getElementById(`form-add-${type}`).classList.remove('active'); }
+
+        function createNewUser() {
+            const u = {
+                name: document.getElementById('new-user-login').value,
+                email: document.getElementById('new-user-email').value,
+                realName: document.getElementById('new-user-name-real').value,
+                surname: document.getElementById('new-user-surname').value,
+                phone: document.getElementById('new-user-phone').value,
+                pass: document.getElementById('new-user-pass').value,
+                role: document.getElementById('new-user-role').value,
+                sede: document.getElementById('new-user-sede').value,
+                area: document.getElementById('new-user-area').value
+            };
+            if(!u.name || !u.pass || !u.area) return alert("Usuario, Contraseña y Área son obligatorios.");
+            u.nickname = u.realName || u.name; 
+            db.config.users.push(u);
+            saveDB(); renderAdminList('users'); hideAddForm('users');
+            alert("Usuario creado exitosamente.");
+        }
+
+        function downloadUserTemplate() {
+            const csvContent = "USUARIO,CORREO,NOMBRE,APELLIDO,CELULAR,CONTRASEÑA,ROL,SEDE,AREA\nadmin2,admin2@prueba.com,Juan,Perez,55555555,0000,Admin,Corporativo,Admin";
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "plantilla_usuarios_caska.csv";
+            link.click();
+        }
+
+        function uploadUserCSV() {
+            const fileInput = document.getElementById('csv-user-upload');
+            const file = fileInput.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const rows = text.split('\n').slice(1);
+                let count = 0;
+                rows.forEach(row => {
+                    if(row.trim()) {
+                        const cols = row.split(',');
+                        if(cols.length >= 6) {
+                            db.config.users.push({
+                                name: cols[0].trim(),
+                                email: cols[1]?.trim() || '',
+                                realName: cols[2]?.trim() || '',
+                                surname: cols[3]?.trim() || '',
+                                phone: cols[4]?.trim() || '',
+                                pass: cols[5]?.trim() || '0000',
+                                role: cols[6]?.trim() || 'Departamento',
+                                sede: cols[7]?.trim() || '',
+                                area: cols[8]?.trim() || '',
+                                nickname: cols[2]?.trim() || cols[0].trim()
+                            });
+                            count++;
+                        }
+                    }
+                });
+                saveDB(); renderAdminList('users'); alert(`Se cargaron ${count} usuarios.`);
+            };
+            reader.readAsText(file);
+        }
+
+        function createNewArea() {
+            const name = document.getElementById('new-area-name').value;
+            const sede = document.getElementById('new-area-sede').value;
+            if(!name) return alert("Nombre obligatorio.");
+            db.config.areas.push({ name: name, sede: sede });
+            saveDB(); loadConfigDropdowns(); renderAdminList('areas'); hideAddForm('areas');
+            document.getElementById('new-area-name').value='';
+        }
+
+        function createObj(type) {
+            let inputId = '';
+            if(type === 'sucursales') inputId = 'new-sucursales-name';
+            else inputId = `new-${type.slice(0,-1)}-name`;
+            const inputElem = document.getElementById(inputId);
+            if(!inputElem) return console.error("ID no encontrado:", inputId);
+            const realName = inputElem.value;
+            if(!realName) return alert("Nombre obligatorio.");
+            const newObj = { name: realName };
+            if(type === 'services' || type === 'clients') { newObj.sede = document.getElementById(`new-${type.slice(0,-1)}-sede`).value; }
+            if(type === 'sucursales') { newObj.client = document.getElementById('new-sucursales-client').value; }
+            db.config[type].push(newObj);
+            saveDB(); 
+            if(type === 'sucursales') renderAdminList('sucursales');
+            else { loadConfigDropdowns(); renderAdminList(type); }
+            hideAddForm(type);
+            inputElem.value = '';
+        }
+
+        function createCatalogItem() {
+            const n = document.getElementById('new-catalog-name').value;
+            const t = document.getElementById('new-catalog-type').value;
+            const c = document.getElementById('new-catalog-crit').value;
+            const d = document.getElementById('new-catalog-desc').value;
+            if(!n || !d) return alert("Nombre y Descripción obligatorios.");
+            db.config.catalog.push({name:n, type:t, crit:c, desc:d});
+            saveDB(); renderAdminList('catalog'); hideAddForm('catalog');
+            document.getElementById('new-catalog-name').value='';
+            document.getElementById('new-catalog-desc').value='';
+        }
+
+        function addConfig(key) { 
+            if(key === 'sedes') {
+                const val = document.getElementById('new-sede-name').value;
+                if(val) { db.config.sedes.push(val); document.getElementById('new-sede-name').value=''; saveDB(); renderAdminList('sedes'); hideAddForm('sedes'); }
+            }
+            if(key === 'types') {
+                const val = document.getElementById('new-types-name').value;
+                if(val) { db.config.types.push(val); document.getElementById('new-types-name').value=''; saveDB(); renderAdminList('types'); hideAddForm('types'); }
+            }
+        }
+
+        function renderAdminList(key) {
+            const list = document.getElementById('list-'+key); list.innerHTML = '';
+            if (key === 'users') {
+                db.config.users.forEach((u, idx) => {
+                    list.innerHTML += `<div class="admin-card"><div class="ac-head"><span class="ac-title">${u.nickname || u.name}</span><button class="btn-card-edit" onclick="openAdminEditUser(${idx})">EDITAR / BORRAR</button></div><span class="ac-badge">${u.role || 'Sin Rol'}</span><div class="ac-info">Área: <b>${u.area}</b></div><div class="ac-footer">📍 ${u.sede || 'N/A'}</div></div>`;
+                });
+            } else if (key === 'areas' || key === 'services' || key === 'clients' || key === 'clients') {
+                db.config[key].forEach((item, idx) => {
+                    const isBroken = !db.config.sedes.includes(item.sede);
+                    const brokenClass = isBroken ? 'card-invalid' : '';
+                    const footerText = isBroken ? '⚠️ SEDE INEXISTENTE' : `📍 ${item.sede}`;
+                    list.innerHTML += `<div class="admin-card ${brokenClass}"><div class="ac-head"><span class="ac-title">${item.name}</span><button class="btn-card-edit" onclick="openEdit('${key}', ${idx})">EDITAR / BORRAR</button></div><div class="ac-footer">${footerText}</div></div>`;
+                });
+            } else if (key === 'sucursales') {
+                db.config.sucursales.forEach((item, idx) => {
+                    list.innerHTML += `<div class="admin-card"><div class="ac-head"><span class="ac-title">${item.name}</span><button class="btn-card-edit" onclick="openEdit('sucursales', ${idx})">EDITAR</button><button class="btn-card-edit" onclick="delConfig('sucursales', ${idx})" style="margin-left:5px;">X</button></div><div class="ac-footer">PERTENECE A: ${item.client || 'N/A'}</div></div>`;
+                });
+            } else if (key === 'catalog') {
+                db.config.catalog.forEach((item, idx) => {
+                    list.innerHTML += `<div class="admin-card"><div class="ac-head"><span class="ac-title">${item.name}</span><button class="btn-card-edit" onclick="db.config.catalog.splice(${idx},1); saveDB(); renderAdminList('catalog');">BORRAR</button></div><div class="ac-info"><b>${item.type}</b> | ${item.crit}</div><div class="ac-info" style="font-size:10px; font-style:italic;">"${item.desc}"</div></div>`;
+                });
+            } else { 
+                db.config[key].forEach((item, idx) => { 
+                    if(key === 'types' && (item === 'Otro' || item === 'otro')) return; 
+                    list.innerHTML += `<div class="admin-card"><div class="ac-head"><span class="ac-title">${item}</span><button class="btn-card-edit" onclick="delSimpleConfig('${key}', ${idx})">BORRAR</button></div></div>`; 
+                });
+            }
+        }
+
+        function delSimpleConfig(key, idx) { if(confirm("¿Eliminar este elemento?")) { db.config[key].splice(idx, 1); saveDB(); renderAdminList(key); } }
+        function openAdminPanel() { document.getElementById('admin-overlay').style.display = 'flex'; adminTab('users'); }
+        function adminTab(tab) { document.querySelectorAll('.adm-content').forEach(el => el.classList.add('hidden')); document.getElementById('adm-'+tab).classList.remove('hidden'); document.querySelectorAll('.admin-tab').forEach(el => el.classList.remove('active')); event.target.classList.add('active'); renderAdminList(tab); }
+        function delConfig(key, idx) { if(confirm('¿Eliminar?')) { db.config[key].splice(idx, 1); saveDB(); renderAdminList(key); loadConfigDropdowns(); } }
+
+        function openAdminEditUser(idx) {
+            const u = db.config.users[idx];
+            document.getElementById('edit-user-idx').value = idx;
+            document.getElementById('edit-user-name').value = u.name;
+            document.getElementById('edit-user-nick').value = u.nickname;
+            document.getElementById('edit-user-role').value = u.role || 'Departamento';
+            const sSelect = document.getElementById('edit-user-sede'); sSelect.innerHTML = '<option value="">- Seleccionar -</option>';
+            db.config.sedes.forEach(s => { const sel = s === u.sede ? 'selected' : ''; sSelect.innerHTML += `<option ${sel}>${s}</option>`; });
+            updateAreaDropdown(u.sede, 'edit-user-area');
+            setTimeout(() => { document.getElementById('edit-user-area').value = u.area; }, 50);
+            document.getElementById('admin-verify-pass').value = '';
+            document.getElementById('user-pass-container').classList.add('hidden');
+            document.getElementById('admin-edit-user-overlay').style.display = 'flex';
+        }
+
+        function verifyAdminAndReveal() {
+            const adminInput = document.getElementById('admin-verify-pass').value;
+            const adminObj = db.config.users.find(u => u.name === session.user);
+            if (adminInput === adminObj.pass) document.getElementById('user-pass-container').classList.remove('hidden'); else alert("Contraseña incorrecta.");
+        }
+
+        function saveUserConfig() {
+            const idx = document.getElementById('edit-user-idx').value;
+            if (!document.getElementById('user-pass-container').classList.contains('hidden')) {
+                const newPass = document.getElementById('edit-user-pass').value;
+                if(newPass) db.config.users[idx].pass = newPass;
+            }
+            db.config.users[idx].nickname = document.getElementById('edit-user-nick').value;
+            db.config.users[idx].role = document.getElementById('edit-user-role').value;
+            db.config.users[idx].sede = document.getElementById('edit-user-sede').value;
+            db.config.users[idx].area = document.getElementById('edit-user-area').value;
+            saveDB(); document.getElementById('admin-edit-user-overlay').style.display = 'none'; renderAdminList('users'); loadConfigDropdowns();
+            alert("Usuario actualizado.");
+        }
+        
+        function deleteUser() { const idx = document.getElementById('edit-user-idx').value; if(confirm("¿Eliminar usuario definitivamente?")) { db.config.users.splice(idx, 1); saveDB(); renderAdminList('users'); document.getElementById('admin-edit-user-overlay').style.display = 'none'; } }
+
+        function openEdit(type, idx) {
+            const item = db.config[type][idx];
+            document.getElementById('edit-generic-type').value = type;
+            document.getElementById('edit-generic-idx').value = idx;
+            document.getElementById('edit-generic-title').innerText = "EDITAR " + (type === 'sucursales' ? 'SUCURSAL' : type.toUpperCase().slice(0,-1)); 
+            const name = typeof item === 'string' ? item : item.name;
+            document.getElementById('edit-generic-name').value = name;
+            const extra = document.getElementById('edit-generic-extra');
+            extra.innerHTML = '';
+            if (type === 'sucursales') {
+                let optsCli = ''; db.config.clients.forEach(c => optsCli += `<option ${c.name === item.client ? 'selected' : ''}>${c.name}</option>`);
+                extra.innerHTML = `<label class="lbl">CLIENTE:</label><select id="edit-generic-client" class="inp" style="margin-bottom:10px;">${optsCli}</select>`;
+            } else if (type !== 'sedes') {
+                let optsSede = ''; db.config.sedes.forEach(s => optsSede += `<option ${s===item.sede?'selected':''}>${s}</option>`);
+                extra.innerHTML = `<label class="lbl">SEDE:</label><select id="edit-generic-sede" class="inp" style="margin-bottom:10px;">${optsSede}</select>`;
+            }
+            document.getElementById('admin-edit-generic-overlay').style.display = 'flex';
+        }
+
+        function saveGeneric() {
+            const type = document.getElementById('edit-generic-type').value;
+            const idx = document.getElementById('edit-generic-idx').value;
+            const newName = document.getElementById('edit-generic-name').value;
+            if (!newName) return alert("El nombre es obligatorio");
+            
+            if (type === 'sedes') { 
+                db.config.sedes[idx] = newName; 
+            } else if (type === 'sucursales') {
+                db.config.sucursales[idx].name = newName;
+                const newCli = document.getElementById('edit-generic-client').value;
+                if(newCli) db.config.sucursales[idx].client = newCli;
+            } else { 
+                db.config[type][idx].name = newName; 
+                const newSede = document.getElementById('edit-generic-sede').value; 
+                if(newSede) db.config[type][idx].sede = newSede; 
+            }
+            
+            saveDB(); loadConfigDropdowns(); renderAdminList(type);
+            document.getElementById('admin-edit-generic-overlay').style.display = 'none';
+        }
+
+        function deleteGeneric() {
+            const type = document.getElementById('edit-generic-type').value;
+            const idx = document.getElementById('edit-generic-idx').value;
+            if(confirm("¿Seguro que deseas eliminar este registro?")) { db.config[type].splice(idx, 1); saveDB(); loadConfigDropdowns(); renderAdminList(type); document.getElementById('admin-edit-generic-overlay').style.display = 'none'; }
+        }
+
+        function openMyProfile() { const userObj = db.config.users.find(u => u.name === session.user); document.getElementById('my-nick').value = userObj.nickname; document.getElementById('my-old-pass').value = ''; document.getElementById('my-new-pass').value = ''; document.getElementById('my-confirm-pass').value = ''; document.getElementById('user-profile-overlay').style.display = 'flex'; }
+        function saveMyProfile() { const oldP = document.getElementById('my-old-pass').value; const newP = document.getElementById('my-new-pass').value; const confP = document.getElementById('my-confirm-pass').value; const newN = document.getElementById('my-nick').value; const userObj = db.config.users.find(u => u.name === session.user); if(oldP !== userObj.pass) return alert("Contraseña incorrecta."); userObj.nickname = newN; if (newP.trim() !== "") { if(newP !== confP) return alert("No coinciden."); userObj.pass = newP; saveDB(); alert("Contraseña actualizada. Inicia de nuevo."); location.reload(); } else { saveDB(); updateUserDisplay(); document.getElementById('user-profile-overlay').style.display = 'none'; alert("Actualizado."); } }
+
+        function saveDB(forceNow = false) {
+            normalizeDB();
+            localStorage.setItem(LOCAL_FALLBACK_KEY, JSON.stringify(db));
+
+            if(!remoteReady && !forceNow) return;
+
+            const upload = async () => {
+                try {
+                    const response = await fetch(`${SUPABASE_REST_URL}/app_state?id=eq.main`, {
+                        method: 'PATCH',
+                        headers: {
+                            'apikey': SUPABASE_API_KEY,
+                            'Authorization': `Bearer ${SUPABASE_API_KEY}`,
+                            'Content-Type': 'application/json',
+                            'Prefer': 'return=minimal'
+                        },
+                        body: JSON.stringify({ data: db, updated_at: new Date().toISOString() })
+                    });
+                    if(!response.ok) throw new Error(`Supabase PATCH ${response.status}`);
+                } catch(err) {
+                    console.error('No se pudo guardar en Supabase:', err);
+                    alert('Aviso: no se pudo guardar en Supabase. El cambio quedó guardado solo localmente.');
+                }
+            };
+
+            if(forceNow) return upload();
+            clearTimeout(saveTimer);
+            saveTimer = setTimeout(upload, 500);
+        }
+        
+        function renderTable() { 
+            const tbody = document.getElementById('table-body'); tbody.innerHTML = ''; 
+            const filterDept = document.getElementById('dept-filter').value; 
+            const critWeight = { 'Alta': 1, 'Media': 2, 'Baja': 3 }; 
+            
+            db.config.services.forEach(srv => { 
+                const srvItems = db.data.filter(i => i.serv === srv.name); 
+                if(srvItems.length === 0) return; 
+                let groups = {}; 
+                srvItems.forEach(item => { 
+                    let cleanFolio = item.folio.replace(/^R-/, ''); let m = cleanFolio.split('-')[0]; if(!groups[m]) groups[m]=[]; item._idx = db.data.indexOf(item); groups[m].push(item); 
+                }); 
+                
+                let visibleGroups = {}; 
+                Object.keys(groups).forEach(mId => { 
+                    let items = groups[mId]; items.sort((a,b) => { const aIsR = a.folio.startsWith('R-'); const bIsR = b.folio.startsWith('R-'); if (aIsR && !bIsR) return 1; if (!aIsR && bIsR) return -1; return critWeight[a.crit] - critWeight[b.crit]; }); 
+                    const filtered = items.filter(i => { if (session.role === 'depto') return i.resp === session.area; if (session.role === 'admin' && filterDept !== 'all') return i.resp === filterDept; return true; }); 
+                    if(filtered.length > 0) visibleGroups[mId] = filtered; 
+                }); 
+
+                if(Object.keys(visibleGroups).length > 0) { 
+                    tbody.innerHTML += `<tr><td colspan="5" class="service-sep">SERVICIO: ${srv.name.toUpperCase()}</td></tr>`; 
+                    Object.keys(visibleGroups).sort((a,b)=>b-a).forEach(mId => { 
+                        const myItems = visibleGroups[mId]; 
+                        let cv=0, cp=0, cc=0, cr=0; // cr = Contestadas/En Revisión
+                        const today = new Date().toISOString().split('T')[0]; 
+                        
+                        myItems.forEach(i => { 
+                            if (i.status === 'cerrado') cc++; 
+                            else if (i.status === 'revision') cr++; // Sumamos las contestadas
+                            else { if (i.date < today) cv++; else cp++; } 
+                        }); 
+
+                        let sumHTML = ''; 
+                        if(cv>0) sumHTML += `<span class="txt-red" style="margin-right:10px;">⚠️ ${cv} VENCIDAS</span>`; 
+                        if(cp>0) sumHTML += `<span class="txt-black" style="margin-right:10px;">⏳ ${cp} EN CURSO</span>`; 
+                        if(cr>0) sumHTML += `<span class="txt-blue" style="margin-right:10px;">🚩 ${cr} POR VALIDAR <span class="answered-dot"></span></span>`; 
+                        if(cc>0) sumHTML += `<span class="txt-green">✔ ${cc} CERRADAS</span>`; 
+
+                        let masterEditBtn = ''; if(['admin','mesa'].includes(session.role)) masterEditBtn = `<button class="btn-edit-master" onclick="event.stopPropagation(); openModal('masiva', '${mId}')">✏️</button>`; 
+                        tbody.innerHTML += `<tr class="row-master" onclick="this.classList.toggle('open'); document.getElementById('d-${mId}').classList.toggle('show');"><td style="text-align:center;">▶</td><td style="font-weight:900;">${mId} ${masterEditBtn}</td><td>${srv.name}</td><td>${myItems[0].cli}</td><td>${sumHTML}</td></tr>`; 
+                        
+                        let detailHTML = `<tr id="d-${mId}" class="row-detail"><td colspan="5" style="padding:0;"><div class="detail-container"><table class="subtable"><thead><tr><th>ID</th><th>RESPONSABLE</th><th>CRITICIDAD</th><th>TIPO</th><th>DESCRIPCIÓN</th><th>FECHA</th><th>ESTATUS</th><th>ACCIÓN</th></tr></thead><tbody>`; 
+                        detailHTML += myItems.map(sub => { 
+                            const isRe = sub.folio.startsWith('R-'); 
+                            let descContent = sub.desc; let rowClass = isRe ? 'row-reassign' : ''; 
+                            if (isRe) descContent = `<span class="desc-reassign">ORIG: ${sub.origDesc || '-'}</span><span class="reason-reassign">MOTIVO: ${sub.desc}</span>`; 
+                            let btnHTML = getBtnHTML(sub); 
+                            let stClass = getStatusClass(sub, today); 
+                            let critClass = sub.crit === 'Alta' ? 'cd-high' : (sub.crit === 'Media' ? 'cd-mid' : 'cd-low');
+                            
+                            let answeredAlert = (sub.status === 'revision') ? '<span class="answered-dot"></span>' : '';
+
+                            return `<tr class="${rowClass}"><td>${sub.folio}</td><td>${sub.resp}</td><td><span class="crit-dot ${critClass}"></span>${sub.crit}</td><td>${sub.type}</td><td>${descContent}</td><td>${sub.date}</td><td>${answeredAlert}<span class="status-badge ${stClass}">${sub.status}</span></td><td>${btnHTML}</td></tr>`; 
+                        }).join(''); 
+                        detailHTML += `</tbody></table></div></td></tr>`; 
+                        tbody.innerHTML += detailHTML; 
+                    }); 
+                } 
+            }); 
+        }
+
+        function getBtnHTML(sub) { if (session.role === 'depto' && sub.status !== 'cerrado') return `<button class="btn-act btn-dark" onclick="editMode('single', ${sub._idx})">RESPONDER</button>`; if ((session.role === 'validador' || session.role === 'admin') && sub.status === 'revision') return `<button class="btn-act btn-green" onclick="editMode('single', ${sub._idx})">VALIDAR</button>`; if (['admin', 'mesa'].includes(session.role)) return `<button class="btn-act btn-dark" onclick="editMode('single', ${sub._idx})">GESTIÓN</button>`; if (sub.status === 'cerrado') { if (session.role === 'admin') return `<button class="btn-act btn-purple" onclick="editMode('single', ${sub._idx})">REAPERTURAR</button>`; return `<span style="font-size:10px; font-weight:bold; color:#999;">BLOQUEADO</span>`; } return ''; }
+        function getStatusClass(sub, today) { if(sub.status==='revision') return 'bg-rev'; if(sub.status==='correccion') return 'bg-cor'; if(sub.status==='cerrado') return 'bg-ok'; if(sub.date < today && sub.status!=='cerrado') return 'bg-ven'; return 'bg-proc'; }
+
+        function populateSelects() {
+            const sServ = document.getElementById('f-serv'); sServ.innerHTML = '<option value="">- Selecciona -</option>'; db.config.services.forEach(s=>sServ.innerHTML+=`<option>${s.name}</option>`);
+            const sCli = document.getElementById('f-cli'); sCli.innerHTML = '<option value="">Esperando Servicio...</option>';
+            const sSuc = document.getElementById('f-sucursal'); sSuc.innerHTML = '<option value="">Esperando Cliente...</option>';
+            const sType = document.getElementById('f-type'); sType.innerHTML=''; db.config.types.forEach(t=>sType.innerHTML+=`<option>${t}</option>`);
+            const rs = document.getElementById('rea-serv'); if(rs) { rs.innerHTML = '<option value="">1. Servicio...</option>'; db.config.services.forEach(s=>rs.innerHTML+=`<option>${s.name}</option>`); }
+            const rc = document.getElementById('rea-cli'); if(rc) rc.innerHTML = '<option value="">2. Cliente...</option>';
+            const rsu = document.getElementById('rea-suc'); if(rsu) rsu.innerHTML = '<option value="">3. Sucursal...</option>';
+            const rf = document.getElementById('rea-folio'); if(rf) rf.innerHTML = '<option value="">4. Selecciona Folio...</option>';
+        }
+
+        function updateClientSelect() {
+            const servName = document.getElementById('f-serv').value;
+            const cliSelect = document.getElementById('f-cli');
+            const sucSelect = document.getElementById('f-sucursal');
+            cliSelect.innerHTML = '<option value="">- Selecciona -</option>';
+            sucSelect.innerHTML = '<option value="">Esperando Cliente...</option>';
+            if(!servName) return;
+            const servObj = db.config.services.find(s => s.name === servName);
+            const targetSede = servObj ? servObj.sede : null;
+            const filteredClients = db.config.clients.filter(c => c.sede === targetSede);
+            if(filteredClients.length === 0) cliSelect.innerHTML = '<option value="">Sin clientes en esta Sede</option>'; else filteredClients.forEach(c => cliSelect.innerHTML += `<option value="${c.name}">${c.name}</option>`);
+        }
+
+        function updateSucursalSelect() {
+            const cliName = document.getElementById('f-cli').value;
+            const sucSelect = document.getElementById('f-sucursal');
+            sucSelect.innerHTML = '<option value="">- Selecciona / Ninguna -</option>';
+            if(!cliName) return;
+            const filteredSucs = db.config.sucursales.filter(b => b.client === cliName);
+            filteredSucs.forEach(s => sucSelect.innerHTML += `<option value="${s.name}">${s.name}</option>`);
+        }
+
+        function updateReassignChain() { 
+            const source = event ? event.target.id : '';
+            const servSel = document.getElementById('rea-serv');
+            const cliSel = document.getElementById('rea-cli');
+            const sucSel = document.getElementById('rea-suc');
+            const folSel = document.getElementById('rea-folio');
+            
+            if (source === 'rea-serv') {
+                cliSel.innerHTML = '<option value="">2. Cliente...</option>';
+                sucSel.innerHTML = '<option value="">3. Sucursal...</option>';
+                if(servSel.value) {
+                    const filteredClients = db.config.clients.filter(cl => cl.serv === servSel.value);
+                    if(filteredClients.length > 0) filteredClients.forEach(cl => cliSel.innerHTML += `<option value="${cl.name}">${cl.name}</option>`);
+                    else db.config.clients.forEach(cl => cliSel.innerHTML += `<option value="${cl.name}">${cl.name}</option>`);
+                }
+            } else if (source === 'rea-cli') {
+                sucSel.innerHTML = '<option value="">3. Sucursal...</option>';
+                if(cliSel.value) {
+                    const filteredSucs = db.config.sucursales.filter(su => su.client === cliSel.value);
+                    filteredSucs.forEach(su => sucSel.innerHTML += `<option value="${su.name}">${su.name}</option>`);
+                }
+            }
+
+            folSel.innerHTML = '<option value="">4. Selecciona Folio...</option>'; 
+            const s = servSel.value; const c = cliSel.value; const suc = sucSel.value;
+            const matches = db.data.filter(i => { 
+                let ok = true; 
+                if(s && i.serv !== s) ok = false; 
+                if(c && i.cli !== c) ok = false; 
+                if(suc && i.sucursal !== suc) ok = false;
+                return ok; 
+            }); 
+            matches.forEach(i => { 
+                let realIdx = db.data.indexOf(i); 
+                folSel.innerHTML += `<option value="${realIdx}">${i.folio} - ${i.desc} (${i.resp})</option>`; 
+            }); 
+        }
+        
+        function openModal(mode, masterRef = null) { 
+            populateSelects(); pendingReassigns = []; renderPendingReassigns(); document.getElementById('modal-overlay').style.display = 'flex'; document.getElementById('m-mode').value = mode; document.getElementById('master-id-ref').value = masterRef || ''; document.getElementById('sec-masiva').classList.add('hidden'); document.getElementById('sec-single').classList.add('hidden'); document.getElementById('box-feedback').classList.add('hidden'); document.getElementById('btn-save').classList.remove('hidden'); document.getElementById('btn-approve').classList.add('hidden'); document.getElementById('btn-reject').classList.add('hidden'); document.getElementById('btn-reopen').classList.add('hidden');
+            
+            // --- NUEVO: Habilitar cabeceras para creación ---
+            document.getElementById('f-serv').disabled = false;
+            document.getElementById('f-cli').disabled = false;
+            document.getElementById('f-sucursal').disabled = false;
+
+            if (mode === 'masiva') { 
+                document.getElementById('sec-masiva').classList.remove('hidden'); const container = document.getElementById('rows-container'); container.innerHTML = ''; 
+                const chips = document.getElementById('catalog-chips'); chips.innerHTML = '';
+                if(db.config.catalog && db.config.catalog.length > 0) { db.config.catalog.forEach((item, idx) => { chips.innerHTML += `<button class="cat-chip" onclick="addChipRow(${idx})"><span class="cat-chip-icon">+</span>${item.name}</button>`; }); }
+                if(masterRef) { 
+                    const existing = db.data.filter(i => i.folio.startsWith(masterRef + '-')); 
+                    if(existing.length > 0) { 
+                        document.getElementById('f-serv').value = existing[0].serv; updateClientSelect(); document.getElementById('f-cli').value = existing[0].cli; updateSucursalSelect(); if(existing[0].sucursal) document.getElementById('f-sucursal').value = existing[0].sucursal;
+                        container.innerHTML = `<div style="padding:10px; background:#e8f8f5; border:1px solid #2ecc71; margin-bottom:10px; font-size:11px; color:#27ae60;"><b>REGISTROS YA GUARDADOS EN ESTE FOLIO (NO SE DUPLICARÁN):</b></div>`;
+                        existing.forEach(i => { container.innerHTML += `<div style="padding:5px 10px; border-bottom:1px solid #eee; font-size:11px; color:#555;">🔹 <b>${i.folio}</b> | ${i.desc} (${i.status})</div>`; });
+                        container.innerHTML += `<div style="margin:15px 0; border-top:2px dashed #ccc;"></div><div style="font-weight:bold; font-size:12px; margin-bottom:5px;">AGREGAR NUEVOS REGISTROS A ESTE FOLIO:</div>`;
+                        addRow();
+                    } 
+                } else { addRow(); } 
+            } 
+        }
+
+        function checkTypeOther() {
+            const val = document.getElementById('f-type').value;
+            const otherInp = document.getElementById('f-type-other');
+            if(val === 'Otro') { otherInp.classList.remove('hidden'); otherInp.focus(); } else { otherInp.classList.add('hidden'); otherInp.value = ''; }
+        }
+
+        function editMode(mode, idx) { 
+            populateSelects(); document.getElementById('modal-overlay').style.display = 'flex'; document.getElementById('m-mode').value = 'single'; document.getElementById('m-id').value = idx; 
+            document.getElementById('sec-masiva').classList.add('hidden'); document.getElementById('sec-single').classList.remove('hidden'); document.getElementById('box-feedback').classList.add('hidden'); 
+            const item = db.data[idx]; 
+            if (session.area === item.resp && !item.openedAt) {
+                item.openedAt = new Date().toLocaleString(); item.openedBy = session.realName || session.user; item.readStatus = "VISTO"; addLog(item, `Incidencia VISTA por ${session.realName || session.user}`); saveDB();
+            }
+            document.getElementById('f-serv').value = item.serv; updateClientSelect(); document.getElementById('f-cli').value = item.cli; updateSucursalSelect(); if(item.sucursal) document.getElementById('f-sucursal').value = item.sucursal;
+            document.getElementById('f-desc').value = item.desc; document.getElementById('f-orig-desc').innerText = item.origDesc || 'N/A'; document.getElementById('f-resp').value = item.resp; document.getElementById('f-date').value = item.date; document.getElementById('f-evi').value = item.evi || ''; document.getElementById('f-feedback').value = ''; document.getElementById('f-crit').value = item.crit || 'Baja'; document.getElementById('f-init-file-name').innerText = item.initFile || '(Sin archivo)'; 
+            document.getElementById('f-type').value = item.type || 'Otro'; if(item.typeSpec) document.getElementById('f-type-other').value = item.typeSpec; checkTypeOther();
+            
+            const isAdmin = session.role === 'admin'; const isVal = session.role === 'validador';
+            document.getElementById('btn-save').classList.remove('hidden'); document.getElementById('btn-approve').classList.add('hidden'); document.getElementById('btn-reject').classList.add('hidden'); document.getElementById('btn-reopen').classList.add('hidden');
+            
+            // --- NUEVO: BLOQUEO DE CABECERAS PARA DEPARTAMENTO ---
+            const isDepto = (session.role === 'depto');
+            document.getElementById('f-serv').disabled = isDepto;
+            document.getElementById('f-cli').disabled = isDepto;
+            document.getElementById('f-sucursal').disabled = isDepto;
+            
+            document.getElementById('f-desc').disabled = !isAdmin; document.getElementById('f-date').disabled = !isAdmin; document.getElementById('f-crit').disabled = !isAdmin; document.getElementById('f-type').disabled = !isAdmin; document.getElementById('f-type-other').disabled = !isAdmin; document.getElementById('f-init-file').disabled = !isAdmin;
+            document.getElementById('f-evi').disabled = !(session.role === 'depto' || isAdmin); document.getElementById('f-file').disabled = !(session.role === 'depto' || isAdmin);
+            if (item.status === 'cerrado') { document.getElementById('f-evi').disabled = true; document.getElementById('f-file').disabled = true; document.getElementById('btn-save').classList.add('hidden'); if (isAdmin) document.getElementById('btn-reopen').classList.remove('hidden'); } else { if ((isVal || isAdmin) && item.status === 'revision') { document.getElementById('btn-save').classList.add('hidden'); document.getElementById('btn-approve').classList.remove('hidden'); document.getElementById('btn-reject').classList.remove('hidden'); } }
+        }
+        
+        function closeModal() { document.getElementById('modal-overlay').style.display = 'none'; }
+        function getLetterID(index) { return String.fromCharCode(65 + index); }
+        function addRow(r='', c='Media', d='', ty='Faltas', t='', f='', isLocked=false) { 
+            if(isLocked) return; 
+            const div = document.createElement('div'); div.className = 'mass-row'; div.setAttribute('data-new', 'true');
+            let uOpts = ''; db.config.areas.forEach(a => uOpts+=`<option>${a.name}</option>`); 
+            let tOpts = ''; db.config.types.forEach(ty=>tOpts+=`<option>${ty}</option>`); 
+            div.innerHTML = `<select class="inp r-dept">${uOpts}</select><select class="inp r-crit"><option value="Alta">Alta</option><option value="Media">Media</option><option value="Baja">Baja</option></select><input type="date" class="inp r-date"><select class="inp r-type">${tOpts}</select><input type="text" class="inp r-desc" placeholder="Descripción / SI ES OTRO ESCRIBE EL TIPO AQUI"><input type="file" class="r-file" style="font-size:10px;"><button class="btn-del" onclick="this.parentElement.remove()">X</button>`; document.getElementById('rows-container').appendChild(div); 
+            if(r) div.querySelector('.r-dept').value = r; if(c) div.querySelector('.r-crit').value = c; if(d) div.querySelector('.r-date').value = d; if(ty) div.querySelector('.r-type').value = ty; if(t) div.querySelector('.r-desc').value = t; 
+        }
+        function addChipRow(idx) { const item = db.config.catalog[idx]; addRow('', item.crit, '', item.type, item.desc); }
+        function executeReassign() { const srcIdx = document.getElementById('rea-folio').value; const newDate = document.getElementById('rea-new-date').value; const motivo = document.getElementById('rea-motivo').value; if(!srcIdx) return alert("Selecciona una incidencia."); if(!newDate) return alert("Selecciona la nueva fecha."); if(!motivo) return alert("Escribe el motivo."); const srcItem = db.data[srcIdx]; pendingReassigns.push({ resp: srcItem.resp, crit: srcItem.crit, type: srcItem.type, origDesc: srcItem.desc, desc: motivo, date: newDate, initFile: srcItem.initFile, originFolio: srcItem.folio }); renderPendingReassigns(); document.getElementById('rea-motivo').value=''; }
+        function renderPendingReassigns() { const c = document.getElementById('reassign-list-container'); c.innerHTML=''; pendingReassigns.forEach((item, idx) => { c.innerHTML += `<div class="reassign-row-item"><b>${item.resp}</b> | ${item.type} | Fecha: ${item.date} | Motivo: ${item.desc} <button class="btn-del" onclick="pendingReassigns.splice(${idx},1); renderPendingReassigns();">X</button></div>`; }); }
+        function addLog(item, action) { if(!item.logs) item.logs = []; item.logs.unshift({ user: session.user, action: action, date: new Date().toLocaleString() }); }
+        
+
+        function downloadClientTemplate() {
+            const csv = "SEDE,SERVICIO,CLIENTE,SUCURSAL\nCorporativo,Custodia,EJEMPLO CLIENTE,SUCURSAL 1\nCorporativo,Monitoreo,EJEMPLO CLIENTE,SUCURSAL 2";
+            const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "plantilla_clientes_caska.csv";
+            link.click();
+        }
+
+        function uploadClientCSV() {
+            const file = document.getElementById('csv-client-upload').files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const rows = text.split('\n').slice(1);
+                let countC = 0, countS = 0;
+                rows.forEach(row => {
+                    const cols = row.split(',').map(s => s?.trim());
+                    if (cols.length < 3) return;
+                    const sede = cols[0] || "Corporativo";
+                    const serv = cols[1];
+                    const cli = cols[2].toUpperCase();
+                    const suc = cols[3]?.toUpperCase();
+                    if (!cli) return;
+                    if (serv && !db.config.services.find(s => s.name.toUpperCase() === serv.toUpperCase())) {
+                        db.config.services.push({name: serv, sede: sede});
+                    }
+                    if (!db.config.clients.find(c => c.name.toUpperCase() === cli.toUpperCase())) {
+                        db.config.clients.push({name: cli, sede: sede});
+                        countC++;
+                    }
+                    if (suc && !db.config.sucursales.find(s => s.name.toUpperCase() === suc.toUpperCase() && s.client.toUpperCase() === cli.toUpperCase())) {
+                        db.config.sucursales.push({name: suc, client: cli});
+                        countS++;
+                    }
+                });
+                saveDB(); renderAdminList('clients'); loadConfigDropdowns();
+                alert(`Carga completada: ${countC} Clientes y ${countS} Sucursales nuevas.`);
+            };
+            reader.readAsText(file);
+        }
+
+        function saveData() { 
+            const mode = document.getElementById('m-mode').value; const s = document.getElementById('f-serv').value; const c = document.getElementById('f-cli').value; const suc = document.getElementById('f-sucursal').value; const now = new Date().toLocaleString();
+            if (mode === 'masiva') {
+                if (!s || s === "") return alert("⚠️ ERROR: Debes seleccionar un SERVICIO obligatoriamente.");
+                if (!c || c === "") return alert("⚠️ ERROR: Debes seleccionar un CLIENTE obligatoriamente.");
+                if (!suc || suc === "") return alert("⚠️ ERROR: Debes seleccionar una SUCURSAL obligatoriamente.");
+                const rows = document.querySelectorAll('.mass-row'); if(rows.length === 0 && pendingReassigns.length === 0) return alert("No hay datos nuevos para guardar."); 
+                let missingDate = false; rows.forEach(r => { if (!r.querySelector('.r-date').value) missingDate = true; }); if (missingDate) return alert("⚠️ ERROR CRÍTICO: Hay incidencias SIN FECHA.");
+                let mid; const existingRef = document.getElementById('master-id-ref').value;
+                if (existingRef) { mid = existingRef; var subIndex = db.data.filter(i => i.folio.startsWith(mid + '-')).length; } else { mid = db.masterCounter++; var subIndex = 0; }
+                rows.forEach(r => { 
+                    const fileInput = r.querySelector('.r-file'); const fileName = fileInput && fileInput.files.length > 0 ? fileInput.files[0].name : ''; 
+                    let finalType = r.querySelector('.r-type').value; let finalDesc = r.querySelector('.r-desc').value;
+                    if (finalType === 'Otro' && finalDesc.trim() !== "") {
+                        const potentialType = finalDesc.trim(); if (!db.config.types.find(t => t.toLowerCase() === potentialType.toLowerCase())) { db.config.types.push(potentialType); alert(`¡Nuevo tipo "${potentialType}" aprendido!`); }
+                        finalType = potentialType; 
+                    }
+                    const newItem = { folio: `${mid}-${getLetterID(subIndex++)}`, serv: s, cli: c, sucursal: suc, resp: r.querySelector('.r-dept').value, crit: r.querySelector('.r-crit').value, date: r.querySelector('.r-date').value, type: finalType, typeSpec: '', desc: finalDesc, initFile: fileName, status: 'proceso', evi: '', logs: [], createdAt: now, createdByRealName: session.realName || session.user, readStatus: "NO LEÍDO" }; 
+                    addLog(newItem, "Creado"); db.data.push(newItem); 
+                }); 
+                let rSubIndex = 0; 
+                pendingReassigns.forEach(pr => { const newItem = { folio: `R-${mid}-${getLetterID(rSubIndex++)}`, serv: s, cli: c, sucursal: suc, resp: pr.resp, crit: pr.crit, date: pr.date, type: pr.type, typeSpec: '', desc: pr.desc, origDesc: pr.origDesc, initFile: pr.initFile, status: 'proceso', evi: '', logs: [], createdAt: now, createdByRealName: session.realName || session.user, readStatus: "NO LEÍDO", originFolio: pr.originFolio || '' }; addLog(newItem, "Reasignado"); db.data.push(newItem); }); 
+            } else { 
+                const idx = document.getElementById('m-id').value; const item = db.data[idx]; item.lastUpdate = now;
+                if (session.role === 'admin') { 
+                    item.date = document.getElementById('f-date').value; item.crit = document.getElementById('f-crit').value; 
+                    let selType = document.getElementById('f-type').value; let specVal = document.getElementById('f-type-other').value;
+                    if (selType === 'Otro' && specVal.trim() !== '') {
+                        const newT = specVal.trim(); if(!db.config.types.find(t => t.toLowerCase() === newT.toLowerCase())) { db.config.types.push(newT); alert(`Nuevo tipo "${newT}" agregado.`); }
+                        item.type = newT; item.typeSpec = '';
+                    } else { item.type = selType; item.typeSpec = ''; }
+                    item.desc = document.getElementById('f-desc').value; addLog(item, "Modificado por Admin"); 
+                } 
+                if (session.role === 'depto') { item.evi = document.getElementById('f-evi').value; item.status = 'revision'; addLog(item, "Evidencia subida"); } 
+                db.data[idx] = item; 
+            } 
+            saveDB(); closeModal(); renderTable(); renderGantt(); renderDashboard(); updateKPIs(); 
+        }
+
+        function validate(ok) { const idx = document.getElementById('m-id').value; if(!ok) { const fbBox = document.getElementById('box-feedback'); if(fbBox.classList.contains('hidden')) { fbBox.classList.remove('hidden'); alert("Escribe el motivo del rechazo."); return; } const reason = document.getElementById('f-feedback').value; if(!reason) return alert("Motivo obligatorio."); db.data[idx].feedback = reason; db.data[idx].status = 'correccion'; addLog(db.data[idx], `Rechazado: ${reason}`); } else { db.data[idx].status = 'cerrado'; addLog(db.data[idx], "Aprobado y Cerrado"); } saveDB(); closeModal(); renderTable(); renderGantt(); renderDashboard(); updateKPIs(); }
+        function reopenIncidence() { const idx = document.getElementById('m-id').value; db.data[idx].status = 'proceso'; addLog(db.data[idx], "Reaperturado por Admin"); saveDB(); closeModal(); renderTable(); renderGantt(); renderDashboard(); updateKPIs(); }
+
+        function renderGantt() { const grid = document.getElementById('gantt-grid'); grid.innerHTML = ''; db.config.services.forEach(srv => { const srvItems = db.data.filter(i => i.serv === srv.name); if(srvItems.length===0) return; grid.innerHTML += `<div class="gantt-sep">${srv.name}</div>`; let groups = {}; srvItems.forEach(item => { let m = item.folio.replace(/^R-/, '').split('-')[0]; if(!groups[m]) groups[m]=[]; item._idx = db.data.indexOf(item); groups[m].push(item); }); Object.keys(groups).sort((a,b)=>b-a).forEach(mId => { const items = groups[mId]; const myItems = items.filter(i => (session.role==='depto'? i.resp===session.area : true)); if(myItems.length===0) return; let blocks = ''; const today = new Date().toISOString().split('T')[0]; myItems.forEach(i => { let bg = 'var(--st-proceso)'; if(i.status==='revision') bg='var(--st-revision)'; if(i.status==='correccion') bg='var(--st-correccion)'; if(i.status==='cerrado') bg='var(--st-cerrado)'; else if(i.date < today) bg='var(--st-vencido)'; blocks += `<div class="gc-block" style="background:${bg};" onclick="viewDetail(${i._idx})">${i.folio}</div>`; }); grid.innerHTML += `<div class="gantt-card"><div class="gc-head">FOLIO ${mId} - ${myItems[0].cli}</div><div class="gc-blocks">${blocks}</div></div>`; }); }); }
+        function viewDetail(idx) { const i = db.data[idx]; document.getElementById('v-folio').innerText = i.folio; let bg = 'var(--st-proceso)'; if(i.status==='revision') bg='var(--st-revision)'; if(i.status==='correccion') bg='var(--st-correccion)'; if(i.status==='cerrado') bg='var(--st-cerrado)'; document.getElementById('v-status').style.background = bg; document.getElementById('v-status').innerText = i.status; document.getElementById('v-crit').innerText = i.crit || 'N/A'; document.getElementById('v-date').innerText = i.date; document.getElementById('v-serv-cli').innerText = `${i.serv} / ${i.cli} (${i.sucursal || 'Sin Sucursal'})`; document.getElementById('v-resp').innerText = i.resp; let finalType = i.type; if(i.type === 'Otro' && i.typeSpec) finalType = `Otro: ${i.typeSpec}`; document.getElementById('v-type').innerText = finalType || 'N/A'; document.getElementById('v-desc').innerText = i.desc; const originRow = document.getElementById('view-origin-row'); if(i.originFolio) { originRow.style.display = 'block'; document.getElementById('v-origin-folio').innerText = i.originFolio; } else { originRow.style.display = 'none'; } document.getElementById('v-created-by').innerText = i.createdByRealName || 'Sistema'; document.getElementById('v-created-at').innerText = i.createdAt || 'Histórico'; document.getElementById('v-read-status').innerText = i.readStatus || 'NO LEÍDO'; document.getElementById('v-read-info').innerText = (i.openedBy && i.openedAt) ? `${i.openedBy} (${i.openedAt})` : '-'; document.getElementById('v-init-file').innerText = i.initFile || 'Ninguno'; document.getElementById('v-evi').innerText = i.evi || 'Sin evidencia de cierre'; const feedBox = document.getElementById('view-feedback-box'); if(i.feedback && i.status === 'correccion') { feedBox.style.display='block'; document.getElementById('v-feed').innerText = i.feedback; } else { feedBox.style.display='none'; } const histBox = document.getElementById('v-history'); histBox.innerHTML = ''; if(i.logs) { i.logs.forEach(l => { histBox.innerHTML += `<div class="hist-item"><span class="hist-date">[${l.date}]</span> <b>${l.user}:</b> ${l.action}</div>`; }); } else { histBox.innerHTML = 'No hay historial disponible.'; } document.getElementById('view-overlay').style.display = 'flex'; }
+        function filterStats(serv, btn) { currentStatService = serv; document.querySelectorAll('.st-tab').forEach(b => b.classList.remove('active')); if(btn) btn.classList.add('active'); renderDashboard(); }
+        function renderDashboard() {
+            let filteredData = db.data; if(currentStatService !== 'ALL') { filteredData = db.data.filter(i => i.serv === currentStatService); }
+            const total = filteredData.length; const closed = filteredData.filter(i => i.status === 'cerrado').length; const pending = total - closed; const efficiency = total > 0 ? Math.round((closed / total) * 100) : 0;
+            document.getElementById('db-total').innerText = total; document.getElementById('db-closed').innerText = closed; document.getElementById('db-pending').innerText = pending; document.getElementById('db-eff').innerText = efficiency + "%";
+            const typeCounts = {}; const clientCounts = {}; const timeCounts = {}; 
+            filteredData.forEach(i => { typeCounts[i.type] = (typeCounts[i.type] || 0) + 1; clientCounts[i.cli] = (clientCounts[i.cli] || 0) + 1; const dateKey = i.date.substring(0, 7); if(!timeCounts[dateKey]) timeCounts[dateKey] = {created:0, closed:0}; timeCounts[dateKey].created++; if(i.status === 'cerrado') timeCounts[dateKey].closed++; });
+            renderChartType(typeCounts); renderChartClient(clientCounts); renderChartTime(timeCounts);
+        }
+        function renderChartType(dataObj) { const ctx = document.getElementById('chartType').getContext('2d'); if(chartTypeInst) chartTypeInst.destroy(); chartTypeInst = new Chart(ctx, { type: 'bar', data: { labels: Object.keys(dataObj), datasets: [{ label: 'Incidencias por Tipo', data: Object.values(dataObj), backgroundColor: '#2C3E50' }] }, options: { responsive: true, maintainAspectRatio: false } }); }
+        function renderChartClient(dataObj) { const ctx = document.getElementById('chartClient').getContext('2d'); if(chartClientInst) chartClientInst.destroy(); chartClientInst = new Chart(ctx, { type: 'doughnut', data: { labels: Object.keys(dataObj), datasets: [{ data: Object.values(dataObj), backgroundColor: ['#E74C3C', '#3498DB', '#F1C40F', '#9B59B6', '#2ECC71'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' }, title: { display: true, text: 'Por Cliente' } } } }); }
+        function renderChartTime(dataObj) { const ctx = document.getElementById('chartTime').getContext('2d'); const labels = Object.keys(dataObj).sort(); const createdData = labels.map(k => dataObj[k].created); const closedData = labels.map(k => dataObj[k].closed); if(chartTimeInst) chartTimeInst.destroy(); chartTimeInst = new Chart(ctx, { type: 'line', data: { labels: labels, datasets: [ { label: 'Abiertas', data: createdData, borderColor: '#D71920', tension: 0.3 }, { label: 'Cerradas', data: closedData, borderColor: '#27AE60', tension: 0.3 } ] }, options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Evolución Mensual' } } } }); }
+        function updateKPIs() { let a=0, p=0, v=0; const today = new Date().toISOString().split('T')[0]; db.data.forEach(i => { if(session.role==='depto' && i.resp!==session.area) return; if(i.status!=='cerrado') { a++; if(i.date < today) v++; else p++; } }); document.getElementById('k-ab').innerText = a; document.getElementById('k-pr').innerText = p; document.getElementById('k-ve').innerText = v; }
+        function nav(p, btn) { document.querySelectorAll('.tab-panel').forEach(x => x.classList.remove('active')); document.getElementById('view-'+p).classList.add('active'); document.querySelectorAll('.nav-btn').forEach(x => x.classList.remove('active')); btn.classList.add('active'); if(p==='gantt') renderGantt(); if(p==='stats') renderDashboard(); }
+        function exportToCSV() { if(!db.data || db.data.length === 0) return alert("No hay datos para exportar."); let csv = "FOLIO,SERVICIO,CLIENTE,SUCURSAL,AREA_RESPONSABLE,SEDE,CRITICIDAD,TIPO_INCIDENCIA,ESTATUS_ACTUAL,FECHA_COMPROMISO,DESCRIPCION_DETALLADA,FOLIO_ORIGEN_REASIGNACION,ARCHIVO_ADJUNTO,EVIDENCIA_RESPUESTA,MOTIVO_RECHAZO,FECHA_HORA_CREACION,USUARIO_CREADOR,FECHA_ULTIMA_ACTUALIZACION,ESTATUS_LECTURA,FECHA_HORA_LECTURA,USUARIO_LECTOR\n"; db.data.forEach(i => { const areaObj = db.config.areas.find(a => a.name === i.resp); const sede = areaObj ? areaObj.sede : 'N/A'; const cleanDesc = (i.desc || '').replace(/,/g, '.').replace(/\n/g, ' ').trim(); const cleanFeedback = (i.feedback || '').replace(/,/g, '.').replace(/\n/g, ' ').trim(); const cleanEvi = (i.evi || '').replace(/,/g, '.').replace(/\n/g, ' ').trim(); let tipoFinal = i.type; if(i.type === 'Otro' && i.typeSpec) tipoFinal = `Otro: ${i.typeSpec}`; const fechaCrea = i.createdAt || '-'; const creador = i.createdByRealName || 'Admin/Sistema'; const ultAct = i.lastUpdate || i.createdAt || '-'; const estatusLectura = i.readStatus || 'NO LEIDO'; const fechaLectura = i.openedAt || '-'; const leidoPor = i.openedBy || '-'; const folioOrigen = i.originFolio || '-'; csv += `${i.folio},${i.serv},${i.cli},${i.sucursal || '-'},${i.resp},${sede},${i.crit},${tipoFinal},${i.status},${i.date},"${cleanDesc}",${folioOrigen},${i.initFile || 'No'},"${cleanEvi}",${cleanFeedback},${fechaCrea},${creador},${ultAct},${estatusLectura},${fechaLectura},${leidoPor}\n`; }); const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' }); const url = window.URL.createObjectURL(blob); const a = document.createElement('a'); a.setAttribute('hidden', ''); a.setAttribute('href', url); a.setAttribute('download', `Caska_Reporte_General_${new Date().toISOString().slice(0,10)}.csv`); document.body.appendChild(a); a.click(); document.body.removeChild(a); }
+    </script>
+</body>
+</html>
